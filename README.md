@@ -12,17 +12,6 @@ Damian Olaso, Gonzalo Consorti
 
 ---
 
-#  Índice
-
-- [Descripción del Proyecto](#-descripción-del-proyecto)
-- [Funcionalidades](#-funcionalidades)
-- [Acceso al Proyecto](#-acceso-al-proyecto)
-- [Tecnologías Utilizadas](#-tecnologías-utilizadas)
-- [Personas Contribuyentes](#-personas-contribuyentes)
-- [Personas Desarrolladoras del Proyecto](#-personas-desarrolladoras-del-proyecto)
-
----
-
 #  Descripción del Proyecto
 
 Este proyecto consiste en el desarrollo de una página web colaborativa orientada a brindar información en tiempo real sobre distintos lugares y servicios.
