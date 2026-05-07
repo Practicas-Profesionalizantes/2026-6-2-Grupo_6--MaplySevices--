@@ -1,4 +1,4 @@
-# Maply Service 2026 6°2 Grupo 6
+# Maply Services 2026 6°2 Grupo 6
 
 Especialidad en Computación, Escuela Técnica N°32 D.E. 14
 
