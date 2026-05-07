@@ -8,10 +8,6 @@ Damian Olaso, Gonzalo Consorti
 
 ---
 
-#  Proyecto de Reportes en Tiempo Real
-
----
-
 #  Descripción del Proyecto
 
 Este proyecto consiste en el desarrollo de una página web colaborativa orientada a brindar información en tiempo real sobre distintos lugares y servicios.
