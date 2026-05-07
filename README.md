@@ -55,8 +55,7 @@ El proyecto se encuentra actualmente en etapa de desarrollo y documentación.
 
 #  Tecnologías Utilizadas
 
-- **React**  
-- **JavaScript**  
+- **React**   
 - **MySQL**  
 - **SQL**  
 - **XAMPP**  
@@ -82,4 +81,3 @@ El proyecto se encuentra actualmente en etapa de desarrollo y documentación.
 ## Product Owner:
 -  Brunella Figallo
 
-—
