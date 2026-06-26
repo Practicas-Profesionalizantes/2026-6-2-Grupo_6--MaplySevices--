@@ -40,11 +40,12 @@ El proyecto se encuentra actualmente en etapa de desarrollo y documentación.
 
 #  Tecnologías Utilizadas
 
-- **React**   
+- **React / React Native**   
 - **MySQL**  
 - **SQL**  
 - **XAMPP**  
-- **Java** *(posible implementación backend)*  
+- **Java** *(posible implementación backend)*
+- **Expo Go (app)**
 
 ---
 
