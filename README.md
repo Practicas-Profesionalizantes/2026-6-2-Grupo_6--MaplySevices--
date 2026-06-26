@@ -54,15 +54,15 @@ El proyecto se encuentra actualmente en etapa de desarrollo y documentación.
 
 -  Juan Pablo Llanos 
 -  Lucca Martinez 
--  Valentina Palacios 
+-  Felipe Kuo Lee 
 
 ---
 
 #  Personas Desarrolladoras del Proyecto
 
 ## Scrum Master:
--  Felipe Kuo Lee
+-  Brunella Figallo
 
 ## Product Owner:
--  Brunella Figallo
+-  Valentina Palacios
 
