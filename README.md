@@ -1,9 +1,9 @@
 # Maply Services 2026 6°2 Grupo 6
 Especialidad en Computación, Escuela Técnica N°32 D.E. 14
-Docentes: Damian Olaso, Gonzalo Consorti
+
 6to2da: Prácticas Profesionalizantes
 
-
+Docentes: Damian Olaso, Gonzalo Consorti
 
 # Descripción del Proyecto
 Este proyecto consiste en el desarrollo de una página web colaborativa orientada a brindar información en tiempo real sobre distintos lugares y servicios.
