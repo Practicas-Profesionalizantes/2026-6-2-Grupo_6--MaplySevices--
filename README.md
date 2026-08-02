@@ -80,17 +80,17 @@ DB_PORT=3306
 
 ## Equipo de trabajo:
 
--  Juan Pablo Llanos 
--  Lucca Martinez 
 -  Felipe Kuo Lee 
+-  Brunella Figallo
+-  Valentina Palacios 
 
 ---
 
 #  Personas Desarrolladoras del Proyecto
 
 ## Scrum Master:
--  Brunella Figallo
+-  Lucca Martinez
 
 ## Product Owner:
--  Valentina Palacios
+-  Juan Pablo Llanos
 
