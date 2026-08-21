@@ -144,11 +144,11 @@ Cada subcarpeta tiene un archivo `.env.example` con los campos necesarios. Copia
 
 | Método | Endpoint | Autenticación | Descripción |
 |--------|----------|:---:|-------------|
-| POST | `/api/auth/register`  | Registro de nuevo usuario |
-| POST | `/api/auth/login`  | Inicio de sesión (devuelve JWT) |
-| POST | `/api/auth/logout`  | Cierre de sesión (invalida el token) |
-| GET | `/api/lugares`  | Lista de establecimientos (filtro por `?categoria=`) |
-| POST | `/api/reportes`  | Crear reporte sobre un establecimiento |
+| POST | `/api/auth/register` | ❌ | Registra un nuevo usuario. Recibe `nombre`, `email` y `password`. Hashea la contraseña con BCrypt y devuelve confirmación. |
+| POST | `/api/auth/login` | ❌ | Inicia sesión. Recibe `email` y `password`, valida el hash y devuelve un token JWT con 7 días de expiración. |
+| POST | `/api/auth/logout` | ✅ | Cierra la sesión del usuario. Invalida el token JWT agregándolo a la blacklist (`tokens_revocados`). |
+| GET | `/api/lugares` | ✅ | Devuelve la lista de establecimientos. Acepta el parámetro opcional `?categoria=` para filtrar por tipo de lugar. |
+| POST | `/api/reportes` | ✅ | Crea un reporte sobre un establecimiento. Recibe `id_lugar`, `categoria_reporte` y `descripcion`. |
 
 Los endpoints con ✅ requieren el header: `Authorization: Bearer <token>`
 
