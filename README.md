@@ -1,96 +1,173 @@
-# Maply Services 2026 6°2 Grupo 6
-Especialidad en Computación, Escuela Técnica N°32 D.E. 14
+# Maply Services 
 
-6to2da: Prácticas Profesionalizantes
-
-Docentes: Damian Olaso, Gonzalo Consorti
-
-# Descripción del Proyecto
-Este proyecto consiste en el desarrollo de una página web colaborativa orientada a brindar información en tiempo real sobre distintos lugares y servicios.
-
-La plataforma permitirá que los usuarios publiquen y consulten reportes relacionados con situaciones cotidianas, como demoras, lugares llenos, cambios de recorrido, cierres temporales y otras novedades importantes.
-
-El objetivo principal es ayudar a las personas a organizarse mejor, ahorrar tiempo y acceder a información actualizada antes de trasladarse a un lugar.
-
-# Funcionalidades
-* Registro e inicio de sesión de usuarios
-* Búsqueda de lugares
-* Publicación de reportes en tiempo real
-* Visualización de comentarios recientes
-* Sistema de denuncias
-* Administración básica de contenido
-* Guardado de lugares favoritos
-* Visualización de ubicaciones
-* Panel de administración
-
-# Acceso al Proyecto
-El proyecto se encuentra actualmente en etapa de desarrollo y documentación.
-
-# Tecnologías Utilizadas
-***React / React Native***
-***MySQL***
-***SQL***
-***XAMPP***
-***Java*** (posible implementación backend)
-***Expo Go (app)***
-
-# Guía de Inicio de Proyecto
-
-### Estructura de Entorno y Despliegue con Expo Go
-Esta guía detalla el procedimiento técnico estándar para la preparación del entorno de desarrollo, inicialización de dependencias y visualización en tiempo real del proyecto **Maply Services**.
-
-### 1. Requisitos Iniciales del Sistema
-Antes de comenzar con la configuración, es obligatorio contar con las siguientes herramientas instaladas:
-
-* ***Node.js:** Se requiere la instalación de la versión **LTS (Long Term Support)** desde su sitio oficial. Durante el asistente de instalación, avance presionando sucesivamente el botón *Next* para asegurar la configuración por defecto de las variables de entorno globales.
-* ***Visual Studio Code:** Utilizado como el entorno de desarrollo integrado (IDE) principal para la edición y depuración del código fuente.
-
-### 2. Preparación del Entorno en VS Code
-Para evitar fallos de permisos o de políticas de ejecución dentro del sistema operativo Windows, siga estrictamente estos pasos:
-
-1. Cree la carpeta de trabajo en el directorio local de su preferencia y ábrala desde el menú superior de Visual Studio Code (`File > Open Folder`).
-2. Despliegue una nueva consola desde el menú superior seleccionando `Terminal > New Terminal`.
-3. Por defecto, el editor suele inicializar una sesión de PowerShell. Para garantizar la compatibilidad de comandos, modifique el tipo de terminal haciendo clic en la flecha de opciones (o el ícono `+`) ubicada en el extremo derecho del panel inferior de la consola y seleccione **"Command Prompt" (cmd)**.
+Aplicación móvil que permite a los usuarios consultar y reportar el estado en tiempo real de servicios y establecimientos cercanos (hospitales, bancos, transporte público, comercios, oficinas públicas, etc.), utilizando mapas interactivos y geolocalización.
 
 ---
 
-### Paso 1: Verificación de Requisitos Previos
-1. Asegúrate de tener instalado Node.js en tu computadora. Puedes verificarlo buscando "Node.js" en el buscador de Windows o abriendo una terminal y ejecutando `node -v`.
-2. Abrir el proyecto en Visual Studio Code.
+## Tecnologías utilizadas
 
-### Paso 2: Configuración de la Base de Datos en XAMPP
-1. Abrí el panel de control de XAMPP.
-2. Iniciá los servicios de Apache y MySQL haciendo clic en el botón Start de cada uno.
-3. Hacé clic en el botón Admin de MySQL para abrir phpMyAdmin en tu navegador (o ingresá directamente a `http://localhost/phpmyadmin`).
-4. En el menú de la izquierda, hacé clic en "Nueva".
-5. Nombrá la base de datos como `maply_services` y dale clic a Crear.
-6. Seleccioná la base de datos recién creada, andá a la pestaña Importar arriba, seleccioná el archivo SQL de tu proyecto y ejecutalo.
+###  Frontend — App Móvil
+| Tecnología | Uso |
+|---|---|
+| React Native + Expo | Framework principal de la app móvil |
+| Expo Router | Navegación por pantallas (tipo file-system routing) |
+| TypeScript | Tipado estático |
+| NativeWind | Estilos con sintaxis de Tailwind CSS para React Native |
+| @rnmapbox/maps | Mapas interactivos y geolocalización (Mapbox SDK) |
+| i18next + expo-localization | Soporte multilingüe (español / inglés) |
+| AsyncStorage | Almacenamiento persistente del token de sesión |
 
-### Paso 3: Variables de Entorno (.env)
-En la raíz de tu carpeta del backend, asegurate de tener un archivo llamado `.env` y confirmá que contenga exactamente las siguientes líneas:
-
-
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=
-DB_NAME=maply_services
-DB_PORT=3306
-
-#  Personas Contribuyentes
-
-## Equipo de trabajo:
-
--  Felipe Kuo Lee 
--  Brunella Figallo
--  Valentina Palacios 
+###  Backend — API REST
+| Tecnología | Uso |
+|---|---|
+| Node.js + Express | Servidor y enrutamiento |
+| MySQL (XAMPP) | Base de datos relacional |
+| jsonwebtoken (JWT) | Autenticación por tokens con expiración |
+| bcryptjs | Hash seguro de contraseñas |
+| express-validator | Validación y sanitización de entradas |
+| mysql2 | Conexión y pool de conexiones a MySQL |
 
 ---
 
-#  Personas Desarrolladoras del Proyecto
+## Requisitos previos
 
-## Scrum Master:
--  Lucca Martinez
+- **Node.js** v18 o superior — [descargar](https://nodejs.org/)
+- **XAMPP** con MySQL corriendo en el puerto 3306 — [descargar](https://www.apachefriends.org/)
+- **Expo CLI**: `npm install -g expo-cli`
+- **EAS CLI** (para compilar la app en dispositivo real): `npm install -g eas-cli`
+- Cuenta en **Mapbox** para obtener el access token — [mapbox.com](https://www.mapbox.com/)
 
-## Product Owner:
--  Juan Pablo Llanos
+---
 
+## Configuración
+
+### 1. Base de datos
+
+1. Iniciar XAMPP y verificar que MySQL esté corriendo (puerto 3306).
+2. Abrir phpMyAdmin (`http://localhost/phpmyadmin`).
+3. Crear la base de datos `maply_services`.
+4. Importar `maply-backend/sql/maply_services.sql` (tablas principales).
+5. Importar `maply-backend/sql/tokens_revocados.sql` (gestión de sesiones revocadas).
+
+### 2. Backend
+
+```bash
+cd maply-backend
+npm install
+cp .env.example .env
+# Editar .env con los datos reales (ver sección Variables de entorno)
+node src/server.js
+```
+
+El servidor queda disponible en `http://localhost:3000`.
+
+### 3. Frontend
+
+```bash
+cd maply-frontend
+npm install
+cp .env.example .env
+# Editar .env con la URL de la API y el token de Mapbox
+npx expo start
+```
+
+>  **Importante:** La integración con Mapbox requiere un **development build** (no funciona con la app Expo Go estándar).
+> Para generar el build en Android: `eas build --profile development --platform android`
+
+---
+
+## Variables de entorno
+
+Cada subcarpeta tiene un archivo `.env.example` con los campos necesarios. Copiar a `.env` y completar con los valores reales.
+
+**El archivo `.env` nunca debe subirse al repositorio.** Ya está incluido en `.gitignore`.
+
+---
+
+## Estructura del proyecto
+
+```
+2026-6-2-Grupo_6--MaplySevices--/
+│
+├── maply-backend/                  # API REST (Node.js + Express)
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── db.js               # Pool de conexiones MySQL
+│   │   ├── controllers/
+│   │   │   ├── authController.js   # Registro, login, logout
+│   │   │   ├── lugaresController.js
+│   │   │   └── reportesController.js
+│   │   ├── middleware/
+│   │   │   └── auth.js             # Verificación JWT + blacklist
+│   │   ├── routes/
+│   │   │   ├── authRoutes.js
+│   │   │   ├── lugaresRoutes.js
+│   │   │   └── reportesRoutes.js
+│   │   ├── validators/
+│   │   │   └── userRegistration.js
+│   │   └── server.js               # Punto de entrada del servidor
+│   ├── sql/
+│   │   ├── maply_services.sql
+│   │   └── tokens_revocados.sql
+│   └── .env.example
+│
+└── maply-frontend/                 # App móvil (React Native + Expo)
+    └── src/
+        ├── app/                    # Pantallas (Expo Router)
+        │   ├── _layout.tsx
+        │   ├── index.tsx           # Pantalla principal (mapa)
+        │   ├── login.tsx
+        │   ├── register.tsx
+        │   ├── create-report.tsx
+        │   ├── report-details.tsx
+        │   └── select-lugar.tsx
+        ├── components/
+        │   ├── Header.tsx
+        │   ├── MapaMaply.tsx       # Capa de abstracción del mapa
+        │   └── ReportCard.tsx
+        ├── constants/
+        │   ├── Colors.ts           # Paleta de colores Maply
+        │   ├── categoriasLugar.ts
+        │   └── categoriasReporte.ts
+        ├── locales/
+        │   ├── es.json             # Traducciones en español
+        │   └── en.json             # Traducciones en inglés
+        ├── services/
+        │   └── api.ts              # Todas las llamadas HTTP a la API
+        └── state/
+            └── lugarSeleccionado.ts
+```
+
+---
+
+## Endpoints de la API
+
+| Método | Endpoint | Autenticación | Descripción |
+|--------|----------|:---:|-------------|
+| POST | `/api/auth/register`  | Registro de nuevo usuario |
+| POST | `/api/auth/login`  | Inicio de sesión (devuelve JWT) |
+| POST | `/api/auth/logout`  | Cierre de sesión (invalida el token) |
+| GET | `/api/lugares`  | Lista de establecimientos (filtro por `?categoria=`) |
+| POST | `/api/reportes`  | Crear reporte sobre un establecimiento |
+
+Los endpoints con ✅ requieren el header: `Authorization: Bearer <token>`
+
+---
+
+## Equipo
+
+**Grupo 6 — 6° Año 2° División — Prácticas Profesionalizantes 2026**
+
+| Nombre | Rol |
+|---|---|
+| Felipe Kuo Lee | Desarrollo |
+| Brunella Figallo | Desarrollo |
+| Juan Pablo Llanos | Team |
+| Valentina Palacios | Team |
+| Lucca Martinez | Team |
+
+---
+
+## Licencia
+
+Proyecto académico — Instituto *[nombre del instituto]* — 2026
