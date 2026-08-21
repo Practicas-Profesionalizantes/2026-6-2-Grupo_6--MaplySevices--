@@ -1,0 +1,63 @@
+{
+  "home": {
+    "title": "Maply Services",
+    "subtitle": "Reportes cerca tuyo",
+    "newReport": "+ Crear reporte",
+    "empty": "Todavía no hay reportes cerca. ¡Sé el primero en publicar uno!",
+    "loading": "Cargando reportes..."
+  },
+  "createReport": {
+    "title": "Nuevo reporte",
+    "place": "Lugar",
+    "choosePlace": "Elegir lugar...",
+    "category": "Categoría",
+    "content": "¿Qué está pasando?",
+    "optional": "opcional",
+    "submit": "Publicar reporte",
+    "errorTitle": "No se pudo publicar",
+    "lugarRequerido": "Elegí un lugar antes de publicar.",
+    "categorias": {
+      "mucha_fila": "Mucha fila",
+      "lugar_lleno": "Lugar lleno",
+      "cerrado": "Cerrado",
+      "demora": "Demora",
+      "atencion_rapida": "Atención rápida",
+      "poco_movimiento": "Poco movimiento",
+      "cambio_recorrido": "Cambio de recorrido",
+      "otro": "Otro"
+    }
+  },
+  "selectLugar": {
+    "all": "Todos",
+    "empty": "No hay lugares cargados todavía.",
+    "categorias": {
+      "hospital": "Hospital",
+      "banco": "Banco",
+      "restaurante": "Restaurante",
+      "transporte": "Transporte",
+      "comercio": "Comercio",
+      "oficina_publica": "Oficina pública",
+      "otro": "Otro"
+    }
+  },
+  "reportDetails": {
+    "title": "Detalle del reporte"
+  },
+  "auth": {
+    "loginLink": "Iniciar sesión",
+    "loginSubmit": "Entrar",
+    "loginErrorTitle": "No se pudo iniciar sesión",
+    "goRegister": "¿No tenés cuenta? Registrate",
+    "registerSubmit": "Crear cuenta",
+    "registerErrorTitle": "No se pudo registrar",
+    "registerValidation": "Completá nombre, email y una contraseña de al menos 8 caracteres.",
+    "goLogin": "¿Ya tenés cuenta? Iniciá sesión",
+    "email": "Email",
+    "password": "Contraseña",
+    "name": "Nombre",
+    "phoneOptional": "Teléfono (opcional)",
+    "logout": "Cerrar sesión",
+    "logoutConfirmTitle": "¿Cerrar sesión?",
+    "cancel": "Cancelar"
+  }
+}

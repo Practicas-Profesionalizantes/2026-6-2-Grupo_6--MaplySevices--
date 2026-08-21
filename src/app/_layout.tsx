@@ -1,18 +1,28 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import '@/global.css';
+import '@/constants/i18n';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { Stack } from 'expo-router';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-SplashScreen.preventAutoHideAsync();
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+// Layout raíz de la app. Nada de tabs acá: Maply es una sola pantalla
+// principal (mapa + lista de reportes) con pantallas satélite (crear
+// reporte, detalle, login, registro) que se abren encima como Stack.
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen
+          name="create-report"
+          options={{ headerShown: true, title: 'Nuevo reporte' }}
+        />
+        <Stack.Screen
+          name="report-details"
+          options={{ headerShown: true, title: 'Detalle del reporte' }}
+        />
+        <Stack.Screen name="login" options={{ headerShown: true, title: 'Iniciar sesión' }} />
+        <Stack.Screen name="register" options={{ headerShown: true, title: 'Crear cuenta' }} />
+      </Stack>
+    </SafeAreaProvider>
   );
 }

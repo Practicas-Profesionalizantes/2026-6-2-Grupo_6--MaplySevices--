@@ -1,0 +1,63 @@
+{
+  "home": {
+    "title": "Maply Services",
+    "subtitle": "Reports near you",
+    "newReport": "+ New report",
+    "empty": "No reports nearby yet. Be the first to post one!",
+    "loading": "Loading reports..."
+  },
+  "createReport": {
+    "title": "New report",
+    "place": "Place",
+    "choosePlace": "Choose a place...",
+    "category": "Category",
+    "content": "What's going on?",
+    "optional": "optional",
+    "submit": "Post report",
+    "errorTitle": "Couldn't post report",
+    "lugarRequerido": "Choose a place before posting.",
+    "categorias": {
+      "mucha_fila": "Long line",
+      "lugar_lleno": "Place is full",
+      "cerrado": "Closed",
+      "demora": "Delay",
+      "atencion_rapida": "Fast service",
+      "poco_movimiento": "Quiet / low traffic",
+      "cambio_recorrido": "Route change",
+      "otro": "Other"
+    }
+  },
+  "selectLugar": {
+    "all": "All",
+    "empty": "No places yet.",
+    "categorias": {
+      "hospital": "Hospital",
+      "banco": "Bank",
+      "restaurante": "Restaurant",
+      "transporte": "Transit",
+      "comercio": "Store",
+      "oficina_publica": "Public office",
+      "otro": "Other"
+    }
+  },
+  "reportDetails": {
+    "title": "Report details"
+  },
+  "auth": {
+    "loginLink": "Log in",
+    "loginSubmit": "Log in",
+    "loginErrorTitle": "Couldn't log in",
+    "goRegister": "No account? Sign up",
+    "registerSubmit": "Create account",
+    "registerErrorTitle": "Couldn't sign up",
+    "registerValidation": "Fill in your name, email, and a password of at least 8 characters.",
+    "goLogin": "Already have an account? Log in",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "phoneOptional": "Phone (optional)",
+    "logout": "Log out",
+    "logoutConfirmTitle": "Log out?",
+    "cancel": "Cancel"
+  }
+}
