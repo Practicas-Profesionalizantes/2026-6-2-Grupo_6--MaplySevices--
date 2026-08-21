@@ -170,4 +170,4 @@ Los endpoints con ✅ requieren el header: `Authorization: Bearer <token>`
 
 ## Licencia
 
-Proyecto académico — Instituto *[nombre del instituto]* — 2026
+Proyecto académico — Escuela Técnica 32 "General José de San Martín" — 2026
