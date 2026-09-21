@@ -35,6 +35,9 @@ export type Usuario = {
   id_usuario: number;
   nombre: string;
   email: string;
+  // "Miembro desde" (pantalla de Configuración, SCRUM-271). Puede no venir
+  // en sesiones viejas guardadas en el dispositivo antes de este cambio.
+  fecha_registro?: string;
 };
 
 async function guardarSesion(token: string, usuario: Usuario): Promise<void> {
@@ -64,6 +67,14 @@ export type Reporte = {
   categoria_reporte: string;
   fecha_registro: string;
   lugar?: { nombre: string; latitud?: string | null; longitud?: string | null };
+};
+
+export type EstadoActualLugar = {
+  id_lugar: number;
+  estado: string | null;
+  total_reportes: number;
+  desglose?: { categoria_reporte: string; total: number }[];
+  mensaje?: string;
 };
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -146,6 +157,10 @@ export function getReporteDetalle(id: string | number): Promise<Reporte> {
   return request<Reporte>(`/reportes/${id}`);
 }
 
+export function getEstadoActualLugar(idLugar: number | string): Promise<EstadoActualLugar> {
+  return request<EstadoActualLugar>(`/reportes/lugar/${idLugar}/estado-actual`);
+}
+
 // --- Lugares -------------------------------------------------------------
 
 export type Lugar = {
@@ -157,7 +172,23 @@ export type Lugar = {
   direccion: string | null;
 };
 
-export function getLugares(categoria?: string): Promise<Lugar[]> {
-  const query = categoria ? `?categoria=${encodeURIComponent(categoria)}` : "";
+export function getLugares(categoria?: string, q?: string): Promise<Lugar[]> {
+  const params = new URLSearchParams();
+  if (categoria) params.set("categoria", categoria);
+  if (q) params.set("q", q);
+  const query = params.toString() ? `?${params.toString()}` : "";
   return request<Lugar[]>(`/lugares${query}`);
+}
+
+export function crearLugar(data: {
+  nombre: string;
+  categoria: string;
+  latitud?: number;
+  longitud?: number;
+  direccion?: string;
+}): Promise<Lugar> {
+  return request<Lugar>("/lugares", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }

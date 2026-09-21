@@ -6,7 +6,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Layout raíz de la app. Nada de tabs acá: Maply es una sola pantalla
 // principal (mapa + lista de reportes) con pantallas satélite (crear
-// reporte, detalle, login, registro) que se abren encima como Stack.
+// reporte, detalle, login, registro, configuración) que se abren encima
+// como Stack.
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
@@ -22,6 +23,10 @@ export default function RootLayout() {
         />
         <Stack.Screen name="login" options={{ headerShown: true, title: 'Iniciar sesión' }} />
         <Stack.Screen name="register" options={{ headerShown: true, title: 'Crear cuenta' }} />
+        <Stack.Screen
+          name="configuracion"
+          options={{ headerShown: true, title: 'Configuración' }}
+        />
       </Stack>
     </SafeAreaProvider>
   );

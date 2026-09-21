@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -8,23 +8,37 @@ import { getLugares, type Lugar } from '@/services/api';
 import { CATEGORIAS_LUGAR } from '@/constants/categoriasLugar';
 import { resolverSeleccionDeLugar } from '@/state/lugarSeleccionado';
 
+// Debounce del buscador (SCRUM-257): sin esto, cada letra tipeada dispara
+// un request al backend (y, más adelante, a la Search Box de Mapbox si se
+// integra acá — que factura por cada tecla sin debounce). 400ms es un
+// punto medio razonable: se siente instantáneo para quien escribe, pero
+// no manda un request por letra.
+const DEBOUNCE_MS = 400;
+
 export default function SelectLugarScreen() {
   const { t } = useTranslation();
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [categoria, setCategoria] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [busquedaDebounced, setBusquedaDebounced] = useState('');
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setBusquedaDebounced(busqueda.trim()), DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [busqueda]);
 
   useFocusEffect(
     useCallback(() => {
       let activo = true;
       setLoading(true);
-      getLugares(categoria ?? undefined)
+      getLugares(categoria ?? undefined, busquedaDebounced || undefined)
         .then((data) => activo && setLugares(data))
         .finally(() => activo && setLoading(false));
       return () => {
         activo = false;
       };
-    }, [categoria])
+    }, [categoria, busquedaDebounced])
   );
 
   function onSeleccionar(lugar: Lugar) {
@@ -34,6 +48,13 @@ export default function SelectLugarScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-maply-bg px-5 pt-4">
+      <TextInput
+        value={busqueda}
+        onChangeText={setBusqueda}
+        placeholder={t('selectLugar.searchPlaceholder')}
+        className="mb-3 rounded-2xl border border-maply-card-border bg-white p-3 text-maply-ink"
+      />
+
       <View className="mb-3 flex-row flex-wrap gap-2">
         <Pressable
           onPress={() => setCategoria(null)}

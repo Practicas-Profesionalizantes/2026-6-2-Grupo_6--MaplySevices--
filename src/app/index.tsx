@@ -1,13 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Header } from '@/components/Header';
-import { MapaMaply, type LugarPin } from '@/components/MapaMaply';
+import { MapaMaply, type LugarPin, type MapaMaplyHandle } from '@/components/MapaMaply';
 import { ReportCard } from '@/components/ReportCard';
 import { getReportes, getUsuarioActual, logout, type Reporte, type Usuario } from '@/services/api';
+import { useUbicacionActual } from '@/hooks/use-ubicacion';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -15,6 +16,8 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const mapaRef = useRef<MapaMaplyHandle>(null);
+  const { ubicacion } = useUbicacionActual();
 
   // useFocusEffect (no useEffect) a propósito: así se recarga la lista y el
   // estado de sesión cada vez que se vuelve a esta pantalla (por ejemplo,
@@ -37,6 +40,15 @@ export default function HomeScreen() {
       };
     }, [])
   );
+
+  // Apenas tenemos la ubicación real del usuario (puede tardar un toque en
+  // llegar, o nunca llegar si no dio permiso), centramos el mapa ahí en vez
+  // de dejarlo siempre en el centro fijo de CABA.
+  useEffect(() => {
+    if (ubicacion) {
+      mapaRef.current?.centrarEn(ubicacion.latitud, ubicacion.longitud);
+    }
+  }, [ubicacion]);
 
   // Un pin por reporte que tenga lat/lng (el lugar siempre debería
   // tenerlas, pero por las dudas si algún lugar viejo quedó sin cargar
@@ -82,20 +94,25 @@ export default function HomeScreen() {
       <Header
         title={t('home.title')}
         rightSlot={
-          usuario ? (
-            <Pressable onPress={onLogoutPress}>
-              <Text className="text-sm font-semibold text-maply-ink">{usuario.nombre}</Text>
+          <View className="flex-row items-center gap-3">
+            <Pressable onPress={() => router.push('/configuracion')}>
+              <Text className="text-sm font-semibold text-maply-ink">⚙</Text>
             </Pressable>
-          ) : (
-            <Pressable onPress={() => router.push('/login')}>
-              <Text className="text-sm font-semibold text-maply-ink">{t('auth.loginLink')}</Text>
-            </Pressable>
-          )
+            {usuario ? (
+              <Pressable onPress={onLogoutPress}>
+                <Text className="text-sm font-semibold text-maply-ink">{usuario.nombre}</Text>
+              </Pressable>
+            ) : (
+              <Pressable onPress={() => router.push('/login')}>
+                <Text className="text-sm font-semibold text-maply-ink">{t('auth.loginLink')}</Text>
+              </Pressable>
+            )}
+          </View>
         }
       />
 
       <View className="px-5 pt-4">
-        <MapaMaply pines={pines} onPinPress={onPinPress} />
+        <MapaMaply ref={mapaRef} pines={pines} onPinPress={onPinPress} />
       </View>
 
       <View className="mt-4 flex-row items-center justify-between px-5">

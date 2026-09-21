@@ -30,6 +30,7 @@
   "selectLugar": {
     "all": "Todos",
     "empty": "No hay lugares cargados todavía.",
+    "searchPlaceholder": "Buscar lugar por nombre...",
     "categorias": {
       "hospital": "Hospital",
       "banco": "Banco",
@@ -41,7 +42,15 @@
     }
   },
   "reportDetails": {
-    "title": "Detalle del reporte"
+    "title": "Detalle del reporte",
+    "currentStatus": "Estado actual (última hora)",
+    "basedOn": "Según {{cantidad}} reporte(s) de la última hora"
+  },
+  "config": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "memberSince": "Miembro desde {{fecha}}",
+    "notLoggedIn": "Iniciá sesión para ver tu perfil."
   },
   "auth": {
     "loginLink": "Iniciar sesión",

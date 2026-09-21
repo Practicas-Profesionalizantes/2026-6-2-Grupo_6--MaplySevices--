@@ -30,6 +30,7 @@
   "selectLugar": {
     "all": "All",
     "empty": "No places yet.",
+    "searchPlaceholder": "Search place by name...",
     "categorias": {
       "hospital": "Hospital",
       "banco": "Bank",
@@ -41,7 +42,15 @@
     }
   },
   "reportDetails": {
-    "title": "Report details"
+    "title": "Report details",
+    "currentStatus": "Current status (last hour)",
+    "basedOn": "Based on {{cantidad}} report(s) from the last hour"
+  },
+  "config": {
+    "title": "Settings",
+    "language": "Language",
+    "memberSince": "Member since {{fecha}}",
+    "notLoggedIn": "Log in to see your profile."
   },
   "auth": {
     "loginLink": "Log in",
