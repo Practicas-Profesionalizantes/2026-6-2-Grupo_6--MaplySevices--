@@ -52,7 +52,14 @@ async function login(req, res) {
     );
     return res.json({
       token,
-      usuario: { id_usuario: usuario.id_usuario, nombre: usuario.nombre, email: usuario.email },
+      usuario: {
+        id_usuario: usuario.id_usuario,
+        nombre: usuario.nombre,
+        email: usuario.email,
+        // Se agrega para poder mostrar "miembro desde" en la pantalla de
+        // Configuración del Frontend, sin tener que pedir un endpoint aparte.
+        fecha_registro: usuario.fecha_registro,
+      },
     });
   } catch (error) {
     console.error(error);
