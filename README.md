@@ -162,8 +162,6 @@ Los endpoints con ✅ requieren el header: `Authorization: Bearer <token>`
 |---|---|
 | Felipe Kuo Lee | Desarrollo |
 | Brunella Figallo | Desarrollo |
-| Juan Pablo Llanos | Team |
-| Valentina Palacios | Team |
 | Lucca Martinez | Team |
 
 ---
