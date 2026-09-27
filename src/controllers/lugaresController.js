@@ -4,7 +4,9 @@ const pool = require('../config/db');
 // logueado (recién se pide login al efectivamente publicar el reporte).
 async function getLugares(req, res) {
   try {
-    const { categoria, q } = req.query;
+    // Solo strings: ?categoria[]=x llegaría como array.
+    const categoria = typeof req.query.categoria === 'string' ? req.query.categoria : '';
+    const q = typeof req.query.q === 'string' ? req.query.q.slice(0, 100) : '';
     const condiciones = ['activo = 1'];
     const params = [];
     if (categoria) {
@@ -39,9 +41,6 @@ async function getLugares(req, res) {
 async function createLugar(req, res) {
   try {
     const { nombre, categoria, latitud, longitud, direccion } = req.body;
-    if (!nombre || !categoria) {
-      return res.status(400).json({ error: 'nombre y categoria son obligatorios' });
-    }
     const [resultado] = await pool.query(
       'INSERT INTO lugar (nombre, categoria, latitud, longitud, direccion, activo) VALUES (?, ?, ?, ?, ?, 1)',
       [nombre, categoria, latitud ?? null, longitud ?? null, direccion ?? null]

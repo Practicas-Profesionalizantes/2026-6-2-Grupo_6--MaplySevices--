@@ -3,15 +3,18 @@ const pool = require('../config/db');
 async function getReportes(req, res) {
   try {
     const [filas] = await pool.query(
-      `SELECT r.*, l.nombre AS lugar_nombre, l.latitud AS lugar_latitud, l.longitud AS lugar_longitud
+      // Columnas explícitas: nunca devolver id_usuario (quién publicó cada reporte).
+      `SELECT r.id_reporte, r.id_lugar, r.contenido, r.categoria_reporte, r.fecha_registro,
+              l.nombre AS lugar_nombre, l.latitud AS lugar_latitud, l.longitud AS lugar_longitud
        FROM reporte r
        JOIN lugar l ON r.id_lugar = l.id_lugar
        WHERE r.activo = 1
-       ORDER BY r.fecha_registro DESC`
+       ORDER BY r.fecha_registro DESC
+       LIMIT 200`
     );
-    const reportes = filas.map((f) => ({
+    const reportes = filas.map(({ lugar_nombre, lugar_latitud, lugar_longitud, ...f }) => ({
       ...f,
-      lugar: { nombre: f.lugar_nombre, latitud: f.lugar_latitud, longitud: f.lugar_longitud },
+      lugar: { nombre: lugar_nombre, latitud: lugar_latitud, longitud: lugar_longitud },
     }));
     res.json(reportes);
   } catch (error) {
@@ -22,7 +25,7 @@ async function getReportes(req, res) {
 
 async function getReporteById(req, res) {
   try {
-    const [filas] = await pool.query('SELECT * FROM reporte WHERE id_reporte = ?', [req.params.id]);
+    const [filas] = await pool.query('SELECT id_reporte, id_lugar, contenido, categoria_reporte, fecha_registro FROM reporte WHERE id_reporte = ? AND activo = 1', [req.params.id]);
     if (!filas[0]) return res.status(404).json({ error: 'Reporte no encontrado' });
     res.json(filas[0]);
   } catch (error) {
@@ -34,12 +37,22 @@ async function getReporteById(req, res) {
 async function crearReporte(req, res) {
   const { id_lugar, contenido, categoria_reporte } = req.body;
   try {
+    // Un reporte por usuario por lugar por hora: frena el farmeo de karma
+    // (cada reporte suma +1 por trigger) y que una sola persona domine el estado actual.
+    const [recientes] = await pool.query(
+      'SELECT 1 FROM reporte WHERE id_usuario = ? AND id_lugar = ? AND fecha_registro >= (NOW() - INTERVAL 1 HOUR) LIMIT 1',
+      [req.usuario.id_usuario, id_lugar]
+    );
+    if (recientes.length > 0) {
+      return res.status(429).json({ error: 'Ya reportaste este lugar en la última hora' });
+    }
     const [resultado] = await pool.query(
       'INSERT INTO reporte (id_usuario, id_lugar, contenido, categoria_reporte, fecha_registro, activo) VALUES (?, ?, ?, ?, NOW(), 1)',
-      [req.usuario.id_usuario, id_lugar, contenido, categoria_reporte]
+      [req.usuario.id_usuario, id_lugar, contenido ?? '', categoria_reporte]
     );
     res.status(201).json({ id_reporte: resultado.insertId, id_lugar, contenido, categoria_reporte });
   } catch (error) {
+    if (error.code === 'ER_NO_REFERENCED_ROW_2') return res.status(400).json({ error: 'Ese lugar no existe' });
     console.error(error);
     res.status(500).json({ error: 'Error al crear el reporte' });
   }
@@ -86,4 +99,39 @@ async function getEstadoActualLugar(req, res) {
   }
 }
 
-module.exports = { getReportes, getReporteById, crearReporte, getEstadoActualLugar };
+// POST /api/reportes/:id/denuncias  { motivo }
+// Cada usuario denuncia un reporte una sola vez. Con DENUNCIAS_PARA_OCULTAR
+// denunciantes distintos el reporte se oculta solo (baja lógica, activo = 0) y
+// queda en `denuncia` con estado 'pendiente' para que un admin lo revise.
+// Lo exige Apple (guía 1.2) para apps con contenido publicado por usuarios.
+// ponytail: umbral fijo; si hay abuso de denuncias, ponderar por karma del denunciante.
+const DENUNCIAS_PARA_OCULTAR = 3;
+
+async function denunciarReporte(req, res) {
+  const id_reporte = req.params.id;
+  try {
+    const [reporte] = await pool.query('SELECT 1 FROM reporte WHERE id_reporte = ? AND activo = 1', [id_reporte]);
+    if (!reporte[0]) return res.status(404).json({ error: 'Reporte no encontrado' });
+
+    await pool.query(
+      `INSERT INTO denuncia (id_reporte, id_usuario_denunciante, motivo)
+       SELECT ?, ?, ? FROM DUAL
+       WHERE NOT EXISTS (SELECT 1 FROM denuncia WHERE id_reporte = ? AND id_usuario_denunciante = ?)`,
+      [id_reporte, req.usuario.id_usuario, req.body.motivo, id_reporte, req.usuario.id_usuario]
+    );
+
+    const [[{ total }]] = await pool.query(
+      "SELECT COUNT(DISTINCT id_usuario_denunciante) AS total FROM denuncia WHERE id_reporte = ? AND estado <> 'desestimada'",
+      [id_reporte]
+    );
+    if (total >= DENUNCIAS_PARA_OCULTAR) {
+      await pool.query('UPDATE reporte SET activo = 0 WHERE id_reporte = ?', [id_reporte]);
+    }
+    res.status(201).json({ mensaje: 'Gracias, vamos a revisar este reporte' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al enviar la denuncia' });
+  }
+}
+
+module.exports = { getReportes, getReporteById, crearReporte, getEstadoActualLugar, denunciarReporte };

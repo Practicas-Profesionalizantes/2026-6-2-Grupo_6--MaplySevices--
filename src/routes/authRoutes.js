@@ -1,32 +1,31 @@
 // src/routes/authRoutes.js
-// Define las rutas HTTP de autenticación y las conecta con los controladores
-// Las rutas NO contienen lógica de negocio: solo enlazan endpoints con los controladores.
-//
-// Este archivo es el mismo que ya estaba en el repo (Documentación branch,
-// suelto en la raíz) — se movió a su lugar real (src/routes/) y se le
-// agregó el logout, que faltaba, usando la tabla tokens_revocados.
+// Define las rutas HTTP de autenticación y las conecta con los controladores.
 
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { verifyToken } = require('../middleware/auth');
+const { registrationValidationRules, validateUserRegistration, loginRules, validar } = require('../validators/userRegistration');
 
-// 1. IMPORTAMOS LAS REGLAS DE VALIDACIÓN:
-const { registrationValidationRules, validateUserRegistration } = require('../validators/userRegistration');
+// Anti fuerza bruta: 5 intentos fallidos cada 15 minutos por IP.
+const limiteLogin = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  skipSuccessfulRequests: true,
+  message: { error: 'Demasiados intentos. Probá de nuevo en 15 minutos.' },
+});
+// Anti creación masiva de cuentas: 5 registros por hora por IP.
+const limiteRegistro = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message: { error: 'Demasiados registros desde esta conexión. Probá más tarde.' },
+});
 
-// POST /api/auth/register -> Crear nuevo usuario
-// 2. INSERTAMOS LAS VALIDACIONES EN EL MEDIO DE LA RUTA:
-router.post(
-    '/register',
-    registrationValidationRules, // Primero chequea las reglas (email válido, contraseña de 8 letras, etc.)
-    validateUserRegistration, // Si hay errores, frena acá y avisa al usuario
-    authController.register // Si todo está perfecto, recién ahí pasa al controlador
-);
-
-// POST /api/auth/login -> Autenticar usuario existente
-router.post('/login', authController.login);
-
-// POST /api/auth/logout -> Invalida el token actual (lo suma a tokens_revocados)
+router.post('/register', limiteRegistro, registrationValidationRules, validateUserRegistration, authController.register);
+router.post('/login', limiteLogin, loginRules, validar, authController.login);
 router.post('/logout', verifyToken, authController.logout);
+// Borrar cuenta (lo exigen Apple/Google y la Ley 25.326): pide la contraseña de nuevo.
+router.delete('/cuenta', verifyToken, limiteLogin, loginRules.slice(1), validar, authController.borrarCuenta);
 
 module.exports = router;
