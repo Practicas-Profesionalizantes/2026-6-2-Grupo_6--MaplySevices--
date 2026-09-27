@@ -11,6 +11,7 @@
 // cambia de plataforma, esto lo resuelve solo según dónde esté corriendo.
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 
 function resolveApiUrl(): string {
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -24,12 +25,17 @@ function resolveApiUrl(): string {
 const API_URL = resolveApiUrl();
 
 // --- Sesión (token JWT + datos del usuario logueado) -----------------
-// Se guarda en el dispositivo con AsyncStorage para que la sesión
-// sobreviva a cerrar y reabrir la app. No es el lugar más "seguro"
-// posible (para eso existe expo-secure-store), pero para el alcance de
-// este proyecto alcanza y de paso funciona igual en web y en nativo.
+// En el celular va al almacenamiento cifrado del sistema (Keychain en iOS,
+// Keystore en Android) con expo-secure-store. En web no existe, así que ahí
+// se usa AsyncStorage (localStorage).
 const TOKEN_KEY = "maply_token";
 const USUARIO_KEY = "maply_usuario";
+
+const almacen = {
+  get: (k: string) => (Platform.OS === "web" ? AsyncStorage.getItem(k) : SecureStore.getItemAsync(k)),
+  set: (k: string, v: string) => (Platform.OS === "web" ? AsyncStorage.setItem(k, v) : SecureStore.setItemAsync(k, v)),
+  del: (k: string) => (Platform.OS === "web" ? AsyncStorage.removeItem(k) : SecureStore.deleteItemAsync(k)),
+};
 
 export type Usuario = {
   id_usuario: number;
@@ -41,22 +47,21 @@ export type Usuario = {
 };
 
 async function guardarSesion(token: string, usuario: Usuario): Promise<void> {
-  await AsyncStorage.multiSet([
-    [TOKEN_KEY, token],
-    [USUARIO_KEY, JSON.stringify(usuario)],
-  ]);
+  await almacen.set(TOKEN_KEY, token);
+  await almacen.set(USUARIO_KEY, JSON.stringify(usuario));
 }
 
 async function borrarSesion(): Promise<void> {
-  await AsyncStorage.multiRemove([TOKEN_KEY, USUARIO_KEY]);
+  await almacen.del(TOKEN_KEY);
+  await almacen.del(USUARIO_KEY);
 }
 
 async function getToken(): Promise<string | null> {
-  return AsyncStorage.getItem(TOKEN_KEY);
+  return almacen.get(TOKEN_KEY);
 }
 
 export async function getUsuarioActual(): Promise<Usuario | null> {
-  const raw = await AsyncStorage.getItem(USUARIO_KEY);
+  const raw = await almacen.get(USUARIO_KEY);
   return raw ? (JSON.parse(raw) as Usuario) : null;
 }
 
@@ -87,6 +92,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     },
     ...options,
   });
+  // Token vencido, revocado o cuenta bloqueada: se limpia la sesión local
+  // para que la app no siga mostrando a la persona como logueada.
+  if (res.status === 401 && token) await borrarSesion();
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     let mensaje = body || res.statusText;
@@ -110,6 +118,7 @@ export async function register(data: {
   email: string;
   contrasena: string;
   telefono?: string;
+  acepta_terminos: boolean;
 }): Promise<{ id_usuario: number; nombre: string; email: string }> {
   return request("/auth/register", {
     method: "POST",
@@ -138,6 +147,12 @@ export async function logout(): Promise<void> {
   }
 }
 
+// Borra la cuenta y todos sus datos en el servidor. Pide la contraseña de nuevo.
+export async function borrarCuenta(contrasena: string): Promise<void> {
+  await request("/auth/cuenta", { method: "DELETE", body: JSON.stringify({ contrasena }) });
+  await borrarSesion();
+}
+
 export function getReportes(): Promise<Reporte[]> {
   return request<Reporte[]>("/reportes");
 }
@@ -151,6 +166,10 @@ export function crearReporte(data: {
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+export function denunciarReporte(id: string | number, motivo: string): Promise<{ mensaje: string }> {
+  return request(`/reportes/${id}/denuncias`, { method: "POST", body: JSON.stringify({ motivo }) });
 }
 
 export function getReporteDetalle(id: string | number): Promise<Reporte> {

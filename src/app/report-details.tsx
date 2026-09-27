@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Text, View, ActivityIndicator } from 'react-native';
+import { Alert, Platform, Pressable, Text, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { getReporteDetalle, getEstadoActualLugar, type Reporte, type EstadoActualLugar } from '@/services/api';
+import { denunciarReporte, getReporteDetalle, getEstadoActualLugar, type Reporte, type EstadoActualLugar } from '@/services/api';
 
 export default function ReportDetailsScreen() {
   const { t } = useTranslation();
@@ -29,6 +29,26 @@ export default function ReportDetailsScreen() {
       .then(setEstadoActual)
       .catch(() => setEstadoActual(null));
   }, [reporte?.id_lugar]);
+
+  // Denunciar (lo exige Apple para contenido publicado por usuarios). Con 3
+  // denuncias de usuarios distintos el backend oculta el reporte.
+  const enviarDenuncia = (motivo: string) =>
+    denunciarReporte(id!, motivo)
+      .then(() => Alert.alert(t('reportDetails.reportThanks')))
+      .catch((e) => Alert.alert(t('reportDetails.reportError'), e.message));
+
+  const pedirDenuncia = () => {
+    // Alert.alert en web no muestra botones (igual que en Configuración).
+    if (Platform.OS === 'web') {
+      if (window.confirm(t('reportDetails.reportTitle'))) enviarDenuncia('Inapropiado');
+      return;
+    }
+    Alert.alert(t('reportDetails.reportTitle'), undefined, [
+      { text: t('reportDetails.reasonFalse'), onPress: () => enviarDenuncia('Información falsa') },
+      { text: t('reportDetails.reasonOffensive'), onPress: () => enviarDenuncia('Ofensivo o spam') },
+      { text: t('reportDetails.cancel'), style: 'cancel' },
+    ]);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-maply-bg px-5 pt-4">
@@ -57,6 +77,10 @@ export default function ReportDetailsScreen() {
               </Text>
             </View>
           ) : null}
+
+          <Pressable onPress={pedirDenuncia} accessibilityRole="button" className="mt-6 self-center p-2">
+            <Text className="text-sm font-semibold text-red-600 underline">{t('reportDetails.report')}</Text>
+          </Pressable>
         </>
       ) : (
         <Text className="text-maply-muted">No se encontró el reporte.</Text>

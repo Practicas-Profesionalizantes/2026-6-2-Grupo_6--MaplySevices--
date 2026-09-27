@@ -20,6 +20,9 @@ const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 if (MAPBOX_TOKEN) {
   Mapbox.setAccessToken(MAPBOX_TOKEN);
 }
+// La política de privacidad dice que Mapbox solo recibe IP y zona del mapa:
+// sin esto el SDK manda telemetría de uso y ubicación a Mapbox.
+Mapbox.setTelemetryEnabled(false);
 
 export type LugarPin = {
   id: number;

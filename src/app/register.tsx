@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Alert, Pressable, Text, TextInput } from 'react-native';
+import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { login, register } from '@/services/api';
@@ -12,11 +12,16 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [telefono, setTelefono] = useState('');
+  const [acepta, setAcepta] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
   async function onSubmit() {
-    if (!nombre.trim() || !email.trim() || contrasena.length < 8) {
+    if (!nombre.trim() || !email.trim() || contrasena.length < 8 || !/[A-Za-z]/.test(contrasena) || !/\d/.test(contrasena)) {
       Alert.alert(t('auth.registerErrorTitle'), t('auth.registerValidation'));
+      return;
+    }
+    if (!acepta) {
+      Alert.alert(t('auth.registerErrorTitle'), t('legal.mustAccept'));
       return;
     }
     setEnviando(true);
@@ -26,6 +31,7 @@ export default function RegisterScreen() {
         email: email.trim(),
         contrasena,
         telefono: telefono.trim() || undefined,
+        acepta_terminos: true,
       });
       // Después de registrar, logueamos directo con las mismas credenciales
       // para no hacerle escribir el email/contraseña dos veces seguidas.
@@ -63,7 +69,7 @@ export default function RegisterScreen() {
         value={contrasena}
         onChangeText={setContrasena}
         secureTextEntry
-        placeholder="Mínimo 8 caracteres"
+        placeholder="Mínimo 8, con letras y números"
         className="mb-4 rounded-2xl border border-maply-card-border bg-white p-3 text-maply-ink"
       />
 
@@ -73,8 +79,27 @@ export default function RegisterScreen() {
         onChangeText={setTelefono}
         keyboardType="phone-pad"
         placeholder="(opcional)"
-        className="mb-6 rounded-2xl border border-maply-card-border bg-white p-3 text-maply-ink"
+        className="mb-4 rounded-2xl border border-maply-card-border bg-white p-3 text-maply-ink"
       />
+
+      <Pressable
+        onPress={() => setAcepta(!acepta)}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: acepta }}
+        className="mb-6 flex-row items-center gap-3"
+      >
+        <View
+          className={`h-6 w-6 items-center justify-center rounded-md border-2 ${acepta ? 'border-maply-violeta bg-maply-violeta' : 'border-maply-muted bg-white'}`}
+        >
+          {acepta ? <Text className="font-bold text-white">✓</Text> : null}
+        </View>
+        <Text className="flex-1 text-sm text-maply-ink">
+          {t('legal.accept')}{' '}
+          <Link href="/legal" className="font-semibold text-maply-violeta underline">
+            {t('legal.linkText')}
+          </Link>
+        </Text>
+      </Pressable>
 
       <Pressable
         disabled={enviando}

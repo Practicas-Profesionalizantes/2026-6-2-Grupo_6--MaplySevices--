@@ -23,6 +23,7 @@ export default function RootLayout() {
         />
         <Stack.Screen name="login" options={{ headerShown: true, title: 'Iniciar sesión' }} />
         <Stack.Screen name="register" options={{ headerShown: true, title: 'Crear cuenta' }} />
+        <Stack.Screen name="legal" options={{ headerShown: true, title: 'Privacidad y términos' }} />
         <Stack.Screen
           name="configuracion"
           options={{ headerShown: true, title: 'Configuración' }}

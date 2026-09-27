@@ -44,13 +44,25 @@
   "reportDetails": {
     "title": "Detalle del reporte",
     "currentStatus": "Estado actual (última hora)",
-    "basedOn": "Según {{cantidad}} reporte(s) de la última hora"
+    "basedOn": "Según {{cantidad}} reporte(s) de la última hora",
+    "report": "Denunciar este reporte",
+    "reportTitle": "¿Por qué querés denunciar este reporte?",
+    "reasonFalse": "Información falsa",
+    "reasonOffensive": "Ofensivo o spam",
+    "cancel": "Cancelar",
+    "reportThanks": "Gracias, vamos a revisar este reporte.",
+    "reportError": "No se pudo enviar la denuncia"
   },
   "config": {
     "title": "Configuración",
     "language": "Idioma",
     "memberSince": "Miembro desde {{fecha}}",
-    "notLoggedIn": "Iniciá sesión para ver tu perfil."
+    "notLoggedIn": "Iniciá sesión para ver tu perfil.",
+    "deleteAccount": "Eliminar mi cuenta",
+    "deletePassword": "Para eliminar tu cuenta escribí tu contraseña. Se borran tu perfil y todos tus reportes. No se puede deshacer.",
+    "deleteConfirm": "Eliminar",
+    "deleteWarning": "¿Seguro? Tu cuenta y tus reportes se borran para siempre.",
+    "deleteError": "No se pudo eliminar la cuenta"
   },
   "auth": {
     "loginLink": "Iniciar sesión",
@@ -59,7 +71,7 @@
     "goRegister": "¿No tenés cuenta? Registrate",
     "registerSubmit": "Crear cuenta",
     "registerErrorTitle": "No se pudo registrar",
-    "registerValidation": "Completá nombre, email y una contraseña de al menos 8 caracteres.",
+    "registerValidation": "Completá nombre, email y una contraseña de al menos 8 caracteres con letras y números.",
     "goLogin": "¿Ya tenés cuenta? Iniciá sesión",
     "email": "Email",
     "password": "Contraseña",
@@ -68,5 +80,10 @@
     "logout": "Cerrar sesión",
     "logoutConfirmTitle": "¿Cerrar sesión?",
     "cancel": "Cancelar"
+  },
+  "legal": {
+    "accept": "Tengo 13 años o más y acepto los",
+    "linkText": "Términos y Política de privacidad",
+    "mustAccept": "Tenés que aceptar los términos y la política de privacidad."
   }
 }

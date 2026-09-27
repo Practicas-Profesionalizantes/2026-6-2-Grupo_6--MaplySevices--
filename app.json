@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "maply-frontend",
+    "name": "Maply",
     "slug": "maply-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,8 @@
     "scheme": "maplyfrontend",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.maplyservices.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +19,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.maplyfrontend"
+      "package": "com.maplyservices.app",
+      "allowBackup": false,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "output": "static",
@@ -34,7 +41,14 @@
           "imageWidth": 76
         }
       ],
-      "@rnmapbox/maps"
+      "@rnmapbox/maps",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Maply usa tu ubicación solo para centrar el mapa en los lugares cercanos. No se guarda ni se comparte."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

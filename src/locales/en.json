@@ -44,13 +44,25 @@
   "reportDetails": {
     "title": "Report details",
     "currentStatus": "Current status (last hour)",
-    "basedOn": "Based on {{cantidad}} report(s) from the last hour"
+    "basedOn": "Based on {{cantidad}} report(s) from the last hour",
+    "report": "Report this post",
+    "reportTitle": "Why do you want to report this post?",
+    "reasonFalse": "False information",
+    "reasonOffensive": "Offensive or spam",
+    "cancel": "Cancel",
+    "reportThanks": "Thanks, we'll review this post.",
+    "reportError": "Couldn't send the report"
   },
   "config": {
     "title": "Settings",
     "language": "Language",
     "memberSince": "Member since {{fecha}}",
-    "notLoggedIn": "Log in to see your profile."
+    "notLoggedIn": "Log in to see your profile.",
+    "deleteAccount": "Delete my account",
+    "deletePassword": "To delete your account, enter your password. Your profile and all your reports will be deleted. This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "deleteWarning": "Are you sure? Your account and reports will be deleted forever.",
+    "deleteError": "Couldn't delete the account"
   },
   "auth": {
     "loginLink": "Log in",
@@ -59,7 +71,7 @@
     "goRegister": "No account? Sign up",
     "registerSubmit": "Create account",
     "registerErrorTitle": "Couldn't sign up",
-    "registerValidation": "Fill in your name, email, and a password of at least 8 characters.",
+    "registerValidation": "Fill in your name, email, and a password of at least 8 characters with letters and numbers.",
     "goLogin": "Already have an account? Log in",
     "email": "Email",
     "password": "Password",
@@ -68,5 +80,10 @@
     "logout": "Log out",
     "logoutConfirmTitle": "Log out?",
     "cancel": "Cancel"
+  },
+  "legal": {
+    "accept": "I'm 13 or older and I accept the",
+    "linkText": "Terms and Privacy Policy",
+    "mustAccept": "You must accept the terms and privacy policy."
   }
 }
