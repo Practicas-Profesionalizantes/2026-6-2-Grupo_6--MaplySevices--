@@ -2,16 +2,19 @@
   "home": {
     "title": "Maply Services",
     "subtitle": "Reports near you",
-    "newReport": "+ New report",
+    "newReport": "Report",
     "empty": "No reports nearby yet. Be the first to post one!",
-    "loading": "Loading reports..."
+    "loading": "Loading reports...",
+    "updated": "Updated just now",
+    "settings": "Settings",
+    "myLocation": "My location"
   },
   "createReport": {
     "title": "New report",
     "place": "Place",
     "choosePlace": "Choose a place...",
-    "category": "Category",
-    "content": "What's going on?",
+    "category": "What's going on?",
+    "content": "Tell us more",
     "optional": "optional",
     "submit": "Post report",
     "errorTitle": "Couldn't post report",
@@ -25,7 +28,9 @@
       "poco_movimiento": "Quiet / low traffic",
       "cambio_recorrido": "Route change",
       "otro": "Other"
-    }
+    },
+    "change": "Change",
+    "close": "Close"
   },
   "selectLugar": {
     "all": "All",
@@ -39,11 +44,12 @@
       "comercio": "Store",
       "oficina_publica": "Public office",
       "otro": "Other"
-    }
+    },
+    "title": "Choose place"
   },
   "reportDetails": {
     "title": "Report details",
-    "currentStatus": "Current status (last hour)",
+    "currentStatus": "Status now",
     "basedOn": "Based on {{cantidad}} report(s) from the last hour",
     "report": "Report this post",
     "reportTitle": "Why do you want to report this post?",
@@ -51,7 +57,14 @@
     "reasonOffensive": "Offensive or spam",
     "cancel": "Cancel",
     "reportThanks": "Thanks, we'll review this post.",
-    "reportError": "Couldn't send the report"
+    "reportError": "Couldn't send the report",
+    "notFound": "Report not found.",
+    "seeTranslation": "See translation",
+    "seeOriginal": "See original",
+    "translating": "Translating...",
+    "translatedBy": "Automatically translated",
+    "thisReport": "This report",
+    "back": "Back"
   },
   "config": {
     "title": "Settings",
@@ -62,28 +75,68 @@
     "deletePassword": "To delete your account, enter your password. Your profile and all your reports will be deleted. This cannot be undone.",
     "deleteConfirm": "Delete",
     "deleteWarning": "Are you sure? Your account and reports will be deleted forever.",
-    "deleteError": "Couldn't delete the account"
+    "deleteError": "Couldn't delete the account",
+    "privacy": "Privacy and terms"
   },
   "auth": {
     "loginLink": "Log in",
     "loginSubmit": "Log in",
     "loginErrorTitle": "Couldn't log in",
-    "goRegister": "No account? Sign up",
     "registerSubmit": "Create account",
     "registerErrorTitle": "Couldn't sign up",
     "registerValidation": "Fill in your name, email, and a password of at least 8 characters with letters and numbers.",
-    "goLogin": "Already have an account? Log in",
     "email": "Email",
     "password": "Password",
     "name": "Name",
-    "phoneOptional": "Phone (optional)",
     "logout": "Log out",
     "logoutConfirmTitle": "Log out?",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "forgotLink": "Forgot your password?",
+    "forgotTitle": "Reset password",
+    "forgotIntro": "We will email you a 6-digit code.",
+    "sendCode": "Send code",
+    "code": "Code",
+    "newPassword": "New password",
+    "resetSubmit": "Change password",
+    "resendCode": "Send another code",
+    "forgotErrorTitle": "Something went wrong",
+    "codeHint": "Check your email (including spam). The code expires in 15 minutes and you have 5 tries; after that you will need a new one.",
+    "passwordHint": "At least 8 characters, with at least one letter and one number.",
+    "loginTitle": "Log in",
+    "loginIntro": "To post reports and keep your activity.",
+    "registerTitle": "Create your account",
+    "registerIntro": "It takes less than a minute.",
+    "noAccount": "No account?",
+    "registerLink": "Sign up",
+    "haveAccount": "Already have an account?",
+    "showPassword": "Show or hide password",
+    "reqLetters": "Letters and numbers",
+    "reqLength": "8 characters or more",
+    "optional": "optional",
+    "phone": "Phone",
+    "logoutHint": "You will need to log in again to post reports."
   },
   "legal": {
     "accept": "I'm 13 or older and I accept the",
     "linkText": "Terms and Privacy Policy",
     "mustAccept": "You must accept the terms and privacy policy."
+  },
+  "placeholders": {
+    "email": "you@example.com",
+    "name": "Your name",
+    "password": "At least 8, with letters and numbers",
+    "optional": "(optional)",
+    "reportContent": "E.g. long line, closed, delay..."
+  },
+  "welcome": {
+    "tagline": "Know how a place is doing before you go.",
+    "start": "Get started",
+    "haveAccount": "I have an account · Log in"
+  },
+  "tiempo": {
+    "ahora": "just now",
+    "minutos": "{{count}} min ago",
+    "horas": "{{count}} h ago",
+    "dias": "{{count}} d ago"
   }
 }

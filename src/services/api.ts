@@ -65,13 +65,18 @@ export async function getUsuarioActual(): Promise<Usuario | null> {
   return raw ? (JSON.parse(raw) as Usuario) : null;
 }
 
+// Pantalla de bienvenida: se muestra solo la primera vez (no es dato sensible).
+const BIENVENIDA_KEY = "maply_bienvenida_vista";
+export const bienvenidaVista = () => AsyncStorage.getItem(BIENVENIDA_KEY).then(Boolean, () => true);
+export const marcarBienvenidaVista = () => AsyncStorage.setItem(BIENVENIDA_KEY, "1");
+
 export type Reporte = {
   id_reporte: number;
   id_lugar: number;
   contenido: string;
   categoria_reporte: string;
   fecha_registro: string;
-  lugar?: { nombre: string; latitud?: string | null; longitud?: string | null };
+  lugar?: { nombre: string; categoria?: string; latitud?: string | null; longitud?: string | null };
 };
 
 export type EstadoActualLugar = {
@@ -147,6 +152,15 @@ export async function logout(): Promise<void> {
   }
 }
 
+// Olvidé mi contraseña: pide un código por mail y después lo canjea.
+export function olvideContrasena(email: string): Promise<{ mensaje: string }> {
+  return request("/auth/olvide-contrasena", { method: "POST", body: JSON.stringify({ email }) });
+}
+
+export function restablecerContrasena(data: { email: string; codigo: string; contrasena: string }): Promise<{ mensaje: string }> {
+  return request("/auth/restablecer-contrasena", { method: "POST", body: JSON.stringify(data) });
+}
+
 // Borra la cuenta y todos sus datos en el servidor. Pide la contraseña de nuevo.
 export async function borrarCuenta(contrasena: string): Promise<void> {
   await request("/auth/cuenta", { method: "DELETE", body: JSON.stringify({ contrasena }) });
@@ -174,6 +188,10 @@ export function denunciarReporte(id: string | number, motivo: string): Promise<{
 
 export function getReporteDetalle(id: string | number): Promise<Reporte> {
   return request<Reporte>(`/reportes/${id}`);
+}
+
+export function traducirReporte(id: string | number, idioma: string): Promise<{ texto: string }> {
+  return request(`/reportes/${id}/traduccion?idioma=${idioma}`);
 }
 
 export function getEstadoActualLugar(idLugar: number | string): Promise<EstadoActualLugar> {

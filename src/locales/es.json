@@ -2,16 +2,19 @@
   "home": {
     "title": "Maply Services",
     "subtitle": "Reportes cerca tuyo",
-    "newReport": "+ Crear reporte",
+    "newReport": "Reportar",
     "empty": "Todavía no hay reportes cerca. ¡Sé el primero en publicar uno!",
-    "loading": "Cargando reportes..."
+    "loading": "Cargando reportes...",
+    "updated": "Actualizado hace un momento",
+    "settings": "Configuración",
+    "myLocation": "Mi ubicación"
   },
   "createReport": {
     "title": "Nuevo reporte",
     "place": "Lugar",
     "choosePlace": "Elegir lugar...",
-    "category": "Categoría",
-    "content": "¿Qué está pasando?",
+    "category": "¿Qué está pasando?",
+    "content": "Contá más",
     "optional": "opcional",
     "submit": "Publicar reporte",
     "errorTitle": "No se pudo publicar",
@@ -25,7 +28,9 @@
       "poco_movimiento": "Poco movimiento",
       "cambio_recorrido": "Cambio de recorrido",
       "otro": "Otro"
-    }
+    },
+    "change": "Cambiar",
+    "close": "Cerrar"
   },
   "selectLugar": {
     "all": "Todos",
@@ -39,11 +44,12 @@
       "comercio": "Comercio",
       "oficina_publica": "Oficina pública",
       "otro": "Otro"
-    }
+    },
+    "title": "Elegir lugar"
   },
   "reportDetails": {
     "title": "Detalle del reporte",
-    "currentStatus": "Estado actual (última hora)",
+    "currentStatus": "Estado ahora",
     "basedOn": "Según {{cantidad}} reporte(s) de la última hora",
     "report": "Denunciar este reporte",
     "reportTitle": "¿Por qué querés denunciar este reporte?",
@@ -51,7 +57,14 @@
     "reasonOffensive": "Ofensivo o spam",
     "cancel": "Cancelar",
     "reportThanks": "Gracias, vamos a revisar este reporte.",
-    "reportError": "No se pudo enviar la denuncia"
+    "reportError": "No se pudo enviar la denuncia",
+    "notFound": "No se encontró el reporte.",
+    "seeTranslation": "Ver traducción",
+    "seeOriginal": "Ver original",
+    "translating": "Traduciendo...",
+    "translatedBy": "Traducido automáticamente",
+    "thisReport": "Este reporte",
+    "back": "Volver"
   },
   "config": {
     "title": "Configuración",
@@ -62,28 +75,68 @@
     "deletePassword": "Para eliminar tu cuenta escribí tu contraseña. Se borran tu perfil y todos tus reportes. No se puede deshacer.",
     "deleteConfirm": "Eliminar",
     "deleteWarning": "¿Seguro? Tu cuenta y tus reportes se borran para siempre.",
-    "deleteError": "No se pudo eliminar la cuenta"
+    "deleteError": "No se pudo eliminar la cuenta",
+    "privacy": "Privacidad y términos"
   },
   "auth": {
     "loginLink": "Iniciar sesión",
     "loginSubmit": "Entrar",
     "loginErrorTitle": "No se pudo iniciar sesión",
-    "goRegister": "¿No tenés cuenta? Registrate",
     "registerSubmit": "Crear cuenta",
     "registerErrorTitle": "No se pudo registrar",
     "registerValidation": "Completá nombre, email y una contraseña de al menos 8 caracteres con letras y números.",
-    "goLogin": "¿Ya tenés cuenta? Iniciá sesión",
     "email": "Email",
     "password": "Contraseña",
     "name": "Nombre",
-    "phoneOptional": "Teléfono (opcional)",
     "logout": "Cerrar sesión",
     "logoutConfirmTitle": "¿Cerrar sesión?",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "forgotLink": "¿Olvidaste tu contraseña?",
+    "forgotTitle": "Recuperar contraseña",
+    "forgotIntro": "Te mandamos un código de 6 números a tu email.",
+    "sendCode": "Enviar código",
+    "code": "Código",
+    "newPassword": "Contraseña nueva",
+    "resetSubmit": "Cambiar contraseña",
+    "resendCode": "Mandar otro código",
+    "forgotErrorTitle": "No se pudo completar",
+    "codeHint": "Revisá tu email (también la carpeta de spam). El código vence en 15 minutos y tenés 5 intentos; después vas a tener que pedir otro.",
+    "passwordHint": "Mínimo 8 caracteres, con al menos una letra y un número.",
+    "loginTitle": "Iniciá sesión",
+    "loginIntro": "Para publicar reportes y guardar tu actividad.",
+    "registerTitle": "Creá tu cuenta",
+    "registerIntro": "Tarda menos de un minuto.",
+    "noAccount": "¿No tenés cuenta?",
+    "registerLink": "Registrate",
+    "haveAccount": "¿Ya tenés cuenta?",
+    "showPassword": "Mostrar u ocultar la contraseña",
+    "reqLetters": "Letras y números",
+    "reqLength": "8 caracteres o más",
+    "optional": "opcional",
+    "phone": "Teléfono",
+    "logoutHint": "Vas a tener que volver a entrar para publicar reportes."
   },
   "legal": {
     "accept": "Tengo 13 años o más y acepto los",
     "linkText": "Términos y Política de privacidad",
     "mustAccept": "Tenés que aceptar los términos y la política de privacidad."
+  },
+  "placeholders": {
+    "email": "vos@ejemplo.com",
+    "name": "Tu nombre",
+    "password": "Mínimo 8, con letras y números",
+    "optional": "(opcional)",
+    "reportContent": "Ej: mucha fila, cerrado, demora..."
+  },
+  "welcome": {
+    "tagline": "Sabé cómo está un lugar antes de ir.",
+    "start": "Empezar",
+    "haveAccount": "Ya tengo cuenta · Iniciar sesión"
+  },
+  "tiempo": {
+    "ahora": "recién",
+    "minutos": "hace {{count}} min",
+    "horas": "hace {{count}} h",
+    "dias": "hace {{count}} d"
   }
 }

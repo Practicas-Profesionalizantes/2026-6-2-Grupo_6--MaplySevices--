@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle } from 'react';
 import { View, Text } from 'react-native';
-import type { LugarPin, MapaMaplyHandle } from './MapaMaply';
+import type { MapaMaplyHandle, MapaMaplyProps } from './MapaMaply';
 
 /**
  * Versión para WEB de la capa de abstracción del mapa.
@@ -18,8 +18,8 @@ import type { LugarPin, MapaMaplyHandle } from './MapaMaply';
  * revisar más adelante si de verdad hace falta el mapa completo en la
  * versión de escritorio.
  */
-export const MapaMaply = forwardRef<MapaMaplyHandle, { pines?: LugarPin[]; onPinPress?: (l: LugarPin) => void }>(
-  function MapaMaplyWeb(_props, ref) {
+export const MapaMaply = forwardRef<MapaMaplyHandle, MapaMaplyProps>(
+  function MapaMaplyWeb({ style }, ref) {
     useImperativeHandle(ref, () => ({
       mostrarPin: () => {},
       buscarLugar: async () => {},
@@ -27,8 +27,8 @@ export const MapaMaply = forwardRef<MapaMaplyHandle, { pines?: LugarPin[]; onPin
     }));
 
     return (
-      <View className="h-56 items-center justify-center rounded-2xl bg-maply-lila/40">
-        <Text className="text-maply-ink">Vista de mapa disponible en la app móvil (Android/iOS)</Text>
+      <View className="items-center justify-center bg-borde" style={style}>
+        <Text className="font-nunito text-secundario">Vista de mapa disponible en la app móvil (Android/iOS)</Text>
       </View>
     );
   }

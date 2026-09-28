@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, Pressable, Text, TextInput } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Text, View, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { Boton, Campo, Encabezado } from '@/components/ui';
 import { login } from '@/services/api';
 
 export default function LoginScreen() {
@@ -26,37 +27,48 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-maply-bg px-5 pt-4">
-      <Text className="mb-2 text-sm font-semibold text-maply-muted">{t('auth.email')}</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        placeholder="vos@ejemplo.com"
-        className="mb-4 rounded-2xl border border-maply-card-border bg-white p-3 text-maply-ink"
-      />
+    <SafeAreaView className="flex-1 bg-fondo">
+      <KeyboardAvoidingView behavior="padding" className="flex-1">
+      <ScrollView contentContainerClassName="px-5 pt-4 pb-4" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <Encabezado label={t('reportDetails.back')} />
+        <Image source={require('@/assets/images/logo.png')} style={{ width: 72, height: 72, borderRadius: 20 }} />
+        <Text className="mt-4 font-nunito9 text-[32px] leading-10 text-texto">{t('auth.loginTitle')}</Text>
+        <Text className="mb-6 mt-1 font-nunito text-base text-secundario">{t('auth.loginIntro')}</Text>
 
-      <Text className="mb-2 text-sm font-semibold text-maply-muted">{t('auth.password')}</Text>
-      <TextInput
-        value={contrasena}
-        onChangeText={setContrasena}
-        secureTextEntry
-        placeholder="••••••••"
-        className="mb-6 rounded-2xl border border-maply-card-border bg-white p-3 text-maply-ink"
-      />
+        <Campo
+          etiqueta={t('auth.email')}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          placeholder={t('placeholders.email')}
+        />
+        <Campo
+          etiqueta={t('auth.password')}
+          value={contrasena}
+          onChangeText={setContrasena}
+          secreto
+          etiquetaMostrar={t('auth.showPassword')}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          className="mb-1"
+        />
 
-      <Pressable
-        disabled={enviando}
-        onPress={onSubmit}
-        className="items-center rounded-full bg-maply-violeta px-4 py-3"
-      >
-        <Text className="font-semibold text-white">{t('auth.loginSubmit')}</Text>
-      </Pressable>
+        <Pressable onPress={() => router.push('/olvide-contrasena')} accessibilityRole="link" className="min-h-11 justify-center self-end">
+          <Text className="font-nunito8 text-sm text-boton">{t('auth.forgotLink')}</Text>
+        </Pressable>
+      </ScrollView>
 
-      <Pressable onPress={() => router.replace('/register')} className="mt-4 items-center">
-        <Text className="text-sm text-maply-muted">{t('auth.goRegister')}</Text>
-      </Pressable>
+      <View className="px-5 pb-2 pt-2">
+        <Boton titulo={t('auth.loginSubmit')} cargando={enviando} onPress={onSubmit} />
+        <Pressable onPress={() => router.replace('/register')} accessibilityRole="link" className="min-h-12 items-center justify-center">
+          <Text className="font-nunito8 text-base text-secundario">
+            {t('auth.noAccount')} <Text className="font-nunito9 text-boton">{t('auth.registerLink')}</Text>
+          </Text>
+        </Pressable>
+      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

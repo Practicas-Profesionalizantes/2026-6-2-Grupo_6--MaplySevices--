@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, Text, TextInput, View } from 'react-native';
-import { Link, router } from 'expo-router';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 
 import i18n from '@/constants/i18n';
+import { Boton, Campo, Encabezado } from '@/components/ui';
+import { useColores } from '@/constants/Colors';
 import { borrarCuenta, getUsuarioActual, type Usuario } from '@/services/api';
 
 const IDIOMAS = [
@@ -19,12 +22,12 @@ function formatearFecha(fechaIso?: string): string | null {
   return fecha.toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'es-AR', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
   });
 }
 
 export default function ConfiguracionScreen() {
   const { t, i18n: i18nInstance } = useTranslation();
+  const c = useColores();
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [idioma, setIdioma] = useState(i18nInstance.language);
   const [borrando, setBorrando] = useState(false);
@@ -70,66 +73,92 @@ export default function ConfiguracionScreen() {
   const miembroDesde = formatearFecha(usuario?.fecha_registro);
 
   return (
-    <SafeAreaView className="flex-1 bg-maply-bg px-5 pt-4">
-      <Text className="mb-2 text-sm font-semibold text-maply-muted">{t('config.language')}</Text>
-      <View className="mb-6 flex-row gap-2">
-        {IDIOMAS.map((opcion) => (
-          <Pressable
-            key={opcion.codigo}
-            onPress={() => onCambiarIdioma(opcion.codigo)}
-            className={`rounded-full px-4 py-2 ${idioma === opcion.codigo ? 'bg-maply-azul' : 'bg-white border border-maply-card-border'}`}
-          >
-            <Text className="text-sm font-semibold text-maply-ink">{opcion.etiqueta}</Text>
-          </Pressable>
-        ))}
-      </View>
+    <SafeAreaView className="flex-1 bg-fondo">
+      <ScrollView contentContainerClassName="px-5 pt-4 pb-4" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <Encabezado titulo={t('config.title')} label={t('reportDetails.back')} />
 
-      {usuario ? (
-        <View className="rounded-2xl border border-maply-card-border bg-white p-4">
-          <Text className="text-base font-semibold text-maply-ink">{usuario.nombre}</Text>
-          <Text className="mt-1 text-sm text-maply-muted">{usuario.email}</Text>
-          {miembroDesde ? (
-            <Text className="mt-2 text-xs text-maply-muted">
-              {t('config.memberSince', { fecha: miembroDesde })}
-            </Text>
-          ) : null}
-        </View>
-      ) : (
-        <Text className="text-maply-muted">{t('config.notLoggedIn')}</Text>
-      )}
-
-      <Link href="/legal" className="mt-6 text-sm font-semibold text-maply-violeta underline">
-        {t('legal.linkText')}
-      </Link>
-
-      {usuario ? (
-        <View className="mt-8">
-          {!borrando ? (
-            <Pressable onPress={() => setBorrando(true)} accessibilityRole="button">
-              <Text className="text-sm font-semibold text-red-600">{t('config.deleteAccount')}</Text>
-            </Pressable>
-          ) : (
-            <View className="rounded-2xl border border-red-300 bg-white p-4">
-              <Text className="mb-2 text-sm text-maply-ink">{t('config.deletePassword')}</Text>
-              <TextInput
-                value={contrasena}
-                onChangeText={setContrasena}
-                secureTextEntry
-                accessibilityLabel={t('auth.password')}
-                className="mb-3 rounded-xl border border-maply-card-border p-3 text-maply-ink"
-              />
-              <View className="flex-row gap-3">
-                <Pressable onPress={() => { setBorrando(false); setContrasena(''); }} className="rounded-full border border-maply-card-border px-4 py-2">
-                  <Text className="text-sm text-maply-ink">{t('auth.cancel')}</Text>
-                </Pressable>
-                <Pressable disabled={enviando || !contrasena} onPress={onBorrarCuenta} className="rounded-full bg-red-600 px-4 py-2">
-                  <Text className="text-sm font-semibold text-white">{t('config.deleteConfirm')}</Text>
-                </Pressable>
-              </View>
+        {usuario ? (
+          <View className="flex-row items-center gap-4 rounded-[20px] border border-borde bg-tarjeta p-5">
+            <View className="h-16 w-16 items-center justify-center rounded-full bg-boton">
+              <Text className="font-nunito9 text-2xl text-white">{usuario.nombre.trim().charAt(0).toUpperCase()}</Text>
             </View>
-          )}
+            <View className="flex-1">
+              <Text className="font-nunito9 text-[22px] text-texto" numberOfLines={1}>
+                {usuario.nombre}
+              </Text>
+              <Text className="font-nunito text-base text-secundario" numberOfLines={1}>
+                {usuario.email}
+              </Text>
+              {miembroDesde ? (
+                <Text className="mt-0.5 font-nunito8 text-sm text-boton">{t('config.memberSince', { fecha: miembroDesde })}</Text>
+              ) : null}
+            </View>
+          </View>
+        ) : (
+          <View className="rounded-[20px] border border-borde bg-tarjeta p-5">
+            <Text className="font-nunito text-base text-secundario">{t('config.notLoggedIn')}</Text>
+          </View>
+        )}
+
+        <Text className="mb-2 mt-6 font-nunito8 text-[15px] text-secundario">{t('config.language')}</Text>
+        <View className="flex-row rounded-2xl bg-borde p-1" accessibilityRole="radiogroup">
+          {IDIOMAS.map((opcion) => {
+            const activo = idioma === opcion.codigo;
+            return (
+              <Pressable
+                key={opcion.codigo}
+                onPress={() => onCambiarIdioma(opcion.codigo)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: activo }}
+                className={`min-h-12 flex-1 items-center justify-center rounded-xl ${activo ? 'bg-superficie' : ''}`}
+                style={activo ? { shadowColor: '#0E1330', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 } : undefined}
+              >
+                <Text className={`font-nunito8 text-base ${activo ? 'text-texto' : 'text-secundario'}`}>{opcion.etiqueta}</Text>
+              </Pressable>
+            );
+          })}
         </View>
-      ) : null}
+
+        <Pressable onPress={() => router.push('/legal')} accessibilityRole="link" className="mt-6">
+          <View className="flex-row items-center gap-3 rounded-[20px] border border-borde bg-tarjeta px-5" style={{ minHeight: 64 }}>
+            <Ionicons name="shield-outline" size={22} color={c.boton} />
+            <Text className="flex-1 font-nunito8 text-[17px] text-texto">{t('config.privacy')}</Text>
+            <Ionicons name="chevron-forward" size={20} color={c.secundario} />
+          </View>
+        </Pressable>
+
+        {usuario ? (
+          <View className="flex-1 justify-end pt-8">
+            {!borrando ? (
+              <Boton titulo={t('config.deleteAccount')} variante="peligro" onPress={() => setBorrando(true)} />
+            ) : (
+              <View className="rounded-[20px] border-[1.5px] border-[#E5484D66] bg-tarjeta p-4">
+                <Text className="mb-3 font-nunito text-base text-texto">{t('config.deletePassword')}</Text>
+                <Campo
+                  etiqueta={t('auth.password')}
+                  value={contrasena}
+                  onChangeText={setContrasena}
+                  secreto
+                  etiquetaMostrar={t('auth.showPassword')}
+                />
+                <View className="flex-row gap-3">
+                  <View className="flex-1">
+                    <Boton titulo={t('auth.cancel')} variante="neutro" onPress={() => { setBorrando(false); setContrasena(''); }} />
+                  </View>
+                  <Pressable
+                    disabled={enviando || !contrasena}
+                    onPress={onBorrarCuenta}
+                    accessibilityRole="button"
+                    className={`min-h-14 flex-1 items-center justify-center rounded-[18px] bg-peligro ${enviando || !contrasena ? 'opacity-50' : ''}`}
+                  >
+                    <Text className="font-nunito8 text-base text-white">{t('config.deleteConfirm')}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+          </View>
+        ) : null}
+      </ScrollView>
     </SafeAreaView>
   );
 }
