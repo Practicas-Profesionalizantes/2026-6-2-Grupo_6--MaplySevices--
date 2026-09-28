@@ -1,9 +1,11 @@
 // Registro, login, logout y borrado de cuenta.
 // `usuario.id_rol` es FK a la tabla `rol`; el id que se asigna al registrarse
 // sale de DEFAULT_ROL_ID en el .env (revisar con `SELECT * FROM rol;`).
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
+const { enviarMail } = require('../config/mailer');
 
 const ROL_POR_DEFECTO = Number(process.env.DEFAULT_ROL_ID) || 2;
 const DURACION_TOKEN = '1d';
@@ -110,4 +112,66 @@ async function borrarCuenta(req, res) {
   }
 }
 
-module.exports = { register, login, logout, borrarCuenta };
+// --- Olvidé mi contraseña: código de 6 dígitos por mail -----------------
+const MINUTOS_CODIGO = 15;
+const MAX_INTENTOS = 5;
+const sha256 = (texto) => crypto.createHash('sha256').update(texto).digest('hex');
+
+// POST /api/auth/olvide-contrasena — responde siempre lo mismo, exista o no
+// el email, para no revelar qué cuentas hay.
+async function olvideContrasena(req, res) {
+  const respuesta = { mensaje: 'Si el email tiene una cuenta, te mandamos un código.' };
+  try {
+    const [filas] = await pool.query('SELECT id_usuario FROM usuario WHERE email = ? AND activo = 1', [req.body.email]);
+    if (!filas[0]) return res.json(respuesta);
+
+    const codigo = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+    await pool.query(
+      `REPLACE INTO recuperacion_contrasena (id_usuario, codigo_hash, fecha_expiracion, intentos)
+       VALUES (?, ?, NOW() + INTERVAL ? MINUTE, 0)`,
+      [filas[0].id_usuario, sha256(codigo), MINUTOS_CODIGO]
+    );
+    await enviarMail({
+      para: req.body.email,
+      asunto: 'Tu código para cambiar la contraseña de Maply',
+      texto: `Tu código es ${codigo}. Vence en ${MINUTOS_CODIGO} minutos.\n\nSi no lo pediste, ignorá este mail: tu contraseña no cambia.`,
+    });
+    return res.json(respuesta);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'No se pudo enviar el código. Probá más tarde.' });
+  }
+}
+
+// POST /api/auth/restablecer-contrasena — valida el código y cambia la contraseña.
+async function restablecerContrasena(req, res) {
+  const { email, codigo, contrasena } = req.body;
+  const invalido = { error: 'Código incorrecto o vencido. Si ya lo intentaste 5 veces, pedí uno nuevo.' };
+  try {
+    const [filas] = await pool.query(
+      `SELECT r.id_usuario, r.codigo_hash, r.intentos, r.fecha_expiracion > NOW() AS vigente
+       FROM recuperacion_contrasena r JOIN usuario u ON u.id_usuario = r.id_usuario
+       WHERE u.email = ? AND u.activo = 1`,
+      [email]
+    );
+    const fila = filas[0];
+    if (!fila || !fila.vigente || fila.intentos >= MAX_INTENTOS) return res.status(400).json(invalido);
+
+    const esperado = Buffer.from(fila.codigo_hash);
+    if (!crypto.timingSafeEqual(esperado, Buffer.from(sha256(codigo)))) {
+      // Tope de intentos: sin esto, 6 dígitos se adivinan probando.
+      await pool.query('UPDATE recuperacion_contrasena SET intentos = intentos + 1 WHERE id_usuario = ?', [fila.id_usuario]);
+      return res.status(400).json(invalido);
+    }
+
+    const hash = await bcrypt.hash(contrasena, 12);
+    await pool.query('UPDATE usuario SET contrasena_hash = ? WHERE id_usuario = ?', [hash, fila.id_usuario]);
+    await pool.query('DELETE FROM recuperacion_contrasena WHERE id_usuario = ?', [fila.id_usuario]);
+    return res.json({ mensaje: 'Contraseña actualizada. Ya podés iniciar sesión.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'No se pudo cambiar la contraseña' });
+  }
+}
+
+module.exports = { register, login, logout, borrarCuenta, olvideContrasena, restablecerContrasena };

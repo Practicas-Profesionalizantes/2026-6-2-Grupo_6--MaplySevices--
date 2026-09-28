@@ -25,9 +25,21 @@ async function getReportes(req, res) {
 
 async function getReporteById(req, res) {
   try {
-    const [filas] = await pool.query('SELECT id_reporte, id_lugar, contenido, categoria_reporte, fecha_registro FROM reporte WHERE id_reporte = ? AND activo = 1', [req.params.id]);
+    // Sin id_usuario, igual que en getReportes.
+    const [filas] = await pool.query(
+      `SELECT r.id_reporte, r.id_lugar, r.contenido, r.categoria_reporte, r.fecha_registro,
+              l.nombre AS lugar_nombre, l.categoria AS lugar_categoria, l.latitud AS lugar_latitud, l.longitud AS lugar_longitud
+       FROM reporte r
+       JOIN lugar l ON r.id_lugar = l.id_lugar
+       WHERE r.id_reporte = ? AND r.activo = 1`,
+      [req.params.id]
+    );
     if (!filas[0]) return res.status(404).json({ error: 'Reporte no encontrado' });
-    res.json(filas[0]);
+    const { lugar_nombre, lugar_categoria, lugar_latitud, lugar_longitud, ...reporte } = filas[0];
+    res.json({
+      ...reporte,
+      lugar: { nombre: lugar_nombre, categoria: lugar_categoria, latitud: lugar_latitud, longitud: lugar_longitud },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al obtener el reporte' });
@@ -134,4 +146,39 @@ async function denunciarReporte(req, res) {
   }
 }
 
-module.exports = { getReportes, getReporteById, crearReporte, getEstadoActualLugar, denunciarReporte };
+// --- "Ver traducción" -------------------------------------------------
+// MyMemory: gratis y sin clave (límite ~5000 caracteres/día por IP). Para
+// mejor calidad, cambiar solo esta función por DeepL o Google Translate.
+// La app es es/en, así que el idioma de origen es "el otro".
+async function traducirTexto(texto, idioma) {
+  const origen = idioma === 'en' ? 'es' : 'en';
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(texto)}&langpair=${origen}|${idioma}`;
+  const respuesta = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const datos = await respuesta.json();
+  if (datos.responseStatus !== 200 || !datos.responseData?.translatedText) {
+    throw new Error(`MyMemory: ${datos.responseDetails || respuesta.status}`);
+  }
+  return datos.responseData.translatedText;
+}
+
+// GET /api/reportes/:id/traduccion?idioma=en — traduce una vez y guarda.
+async function traducirReporte(req, res) {
+  const { id } = req.params;
+  const { idioma } = req.query;
+  try {
+    const [cache] = await pool.query('SELECT texto FROM traduccion_reporte WHERE id_reporte = ? AND idioma = ?', [id, idioma]);
+    if (cache[0]) return res.json({ texto: cache[0].texto });
+
+    const [filas] = await pool.query('SELECT contenido FROM reporte WHERE id_reporte = ? AND activo = 1', [id]);
+    if (!filas[0]) return res.status(404).json({ error: 'Reporte no encontrado' });
+
+    const texto = await traducirTexto(filas[0].contenido, idioma);
+    await pool.query('INSERT IGNORE INTO traduccion_reporte (id_reporte, idioma, texto) VALUES (?, ?, ?)', [id, idioma, texto.slice(0, 1000)]);
+    res.json({ texto });
+  } catch (error) {
+    console.error(error);
+    res.status(502).json({ error: 'No se pudo traducir ahora. Probá más tarde.' });
+  }
+}
+
+module.exports = { getReportes, getReporteById, crearReporte, getEstadoActualLugar, denunciarReporte, traducirReporte };

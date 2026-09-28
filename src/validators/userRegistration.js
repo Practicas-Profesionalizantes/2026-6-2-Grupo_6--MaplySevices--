@@ -26,6 +26,14 @@ const registrationValidationRules = [
 
 const loginRules = [email(), body('contrasena').isString().isLength({ min: 1, max: 72 })];
 
+const olvideRules = [email()];
+// La contraseña nueva sigue las mismas reglas que en el registro.
+const restablecerRules = [
+  email(),
+  body('codigo').isString().trim().matches(/^\d{6}$/).withMessage('El código tiene 6 números'),
+  registrationValidationRules[2],
+];
+
 const reporteRules = [
   body('id_lugar').isInt({ min: 1 }).toInt(),
   body('categoria_reporte').isIn(CATEGORIAS_REPORTE),
@@ -59,6 +67,8 @@ module.exports = {
   validateUserRegistration,
   validar: validateUserRegistration,
   loginRules,
+  olvideRules,
+  restablecerRules,
   reporteRules,
   lugarRules,
   denunciaRules,
