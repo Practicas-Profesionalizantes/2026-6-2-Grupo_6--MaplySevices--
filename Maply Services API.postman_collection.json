@@ -1,0 +1,584 @@
+{
+  "info": {
+    "name": "Maply Services API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Generada desde openapi.yaml. Hacer primero Login: guarda el token solo."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "id",
+      "value": "1"
+    },
+    {
+      "key": "id_lugar",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Registrar un usuario nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ],
+              "query": []
+            },
+            "description": "Límite: 5 registros por hora por IP. La contraseña se guarda con bcrypt (costo 12).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Brunella\",\n  \"email\": \"brune@ejemplo.com\",\n  \"contrasena\": \"MiClave2026\",\n  \"telefono\": \"+54 11 5555-1234\",\n  \"acepta_terminos\": \"true\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "Límite anti fuerza bruta: 5 intentos fallidos cada 15 minutos por IP.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"brune@ejemplo.com\",\n  \"contrasena\": \"MiClave2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.token) pm.collectionVariables.set(\"token\", j.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cerrar sesión (revoca el token actual)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ],
+              "query": []
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pedir código para recuperar la contraseña",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/olvide-contrasena",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "olvide-contrasena"
+              ],
+              "query": []
+            },
+            "description": "Envía por email un código de 6 dígitos que vence en 15 minutos. Responde siempre lo\nmismo, exista o no la cuenta, para no revelar qué emails están registrados.\nLímite: 5 pedidos por hora por IP.\n",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"brune@ejemplo.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cambiar la contraseña con el código recibido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/restablecer-contrasena",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "restablecer-contrasena"
+              ],
+              "query": []
+            },
+            "description": "Máximo 5 intentos por código; después hay que pedir uno nuevo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"brune@ejemplo.com\",\n  \"codigo\": \"482913\",\n  \"contrasena\": \"NuevaClave2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Eliminar la cuenta propia",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/cuenta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "cuenta"
+              ],
+              "query": []
+            },
+            "description": "Pide la contraseña de nuevo. Borra el usuario, sus reportes y sus tokens en una transacción (Ley 25.326 / requisitos de Google Play y App Store).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasena\": \"MiClave2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lugares",
+      "item": [
+        {
+          "name": "Listar lugares activos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lugares?categoria=&q=hospital&pagina=1&limite=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lugares"
+              ],
+              "query": [
+                {
+                  "key": "categoria",
+                  "value": ""
+                },
+                {
+                  "key": "q",
+                  "value": "hospital"
+                },
+                {
+                  "key": "pagina",
+                  "value": "1"
+                },
+                {
+                  "key": "limite",
+                  "value": "100"
+                }
+              ]
+            },
+            "description": "No requiere login. Ordenados por nombre y paginados."
+          }
+        },
+        {
+          "name": "Proponer un lugar nuevo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/lugares",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "lugares"
+              ],
+              "query": []
+            },
+            "description": "Requiere login. Límite: 10 lugares por hora por usuario.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Hospital Fernández\",\n  \"categoria\": \"hospital\",\n  \"latitud\": -34.5813,\n  \"longitud\": -58.4064,\n  \"direccion\": \"Cerviño 3356, CABA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reportes",
+      "item": [
+        {
+          "name": "Listar los últimos 200 reportes activos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reportes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes"
+              ],
+              "query": []
+            },
+            "description": "No requiere login. Nunca devuelve quién publicó cada reporte."
+          }
+        },
+        {
+          "name": "Publicar un reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reportes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes"
+              ],
+              "query": []
+            },
+            "description": "Requiere login. Límite: 30 publicaciones por hora por usuario y un reporte por lugar\npor hora. Cada reporte suma 1 punto de karma al autor (trigger en la base).\n",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_lugar\": 3,\n  \"categoria_reporte\": \"mucha_fila\",\n  \"contenido\": \"Hay como 20 personas esperando\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Detalle de un reporte",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reportes/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes",
+                "{{id}}"
+              ],
+              "query": []
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Estado actual de un lugar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reportes/lugar/{{id_lugar}}/estado-actual",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes",
+                "lugar",
+                "{{id_lugar}}",
+                "estado-actual"
+              ],
+              "query": []
+            },
+            "description": "Agrupa los reportes de la última hora por categoría y devuelve la más repetida como estado vigente."
+          }
+        },
+        {
+          "name": "Traducir el texto de un reporte (es ↔ en)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reportes/{{id}}/traduccion?idioma=es",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes",
+                "{{id}}",
+                "traduccion"
+              ],
+              "query": [
+                {
+                  "key": "idioma",
+                  "value": "es"
+                }
+              ]
+            },
+            "description": "Usa el servicio MyMemory y guarda la traducción en caché. Límite: 60 por hora por IP."
+          }
+        },
+        {
+          "name": "Denunciar un reporte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reportes/{{id}}/denuncias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportes",
+                "{{id}}",
+                "denuncias"
+              ],
+              "query": []
+            },
+            "description": "Requiere login. Cada usuario denuncia un reporte una sola vez. Con 3 denunciantes\ndistintos el reporte se oculta automáticamente y queda pendiente de revisión.\nLímite: 20 denuncias por hora por usuario.\n",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Información falsa\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Administración",
+      "item": [
+        {
+          "name": "Bloquear o desbloquear un usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/usuarios/{{id}}/bloqueo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "usuarios",
+                "{{id}}",
+                "bloqueo"
+              ],
+              "query": []
+            },
+            "description": "Solo para administradores (id_rol = ADMIN_ROL_ID). Bloquear es una baja lógica\n(activo = 0): el usuario pierde el acceso al instante, aunque tenga un token vigente.\nUn administrador no puede bloquear su propia cuenta.\n",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bloqueado\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

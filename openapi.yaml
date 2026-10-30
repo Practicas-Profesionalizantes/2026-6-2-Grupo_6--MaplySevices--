@@ -1,0 +1,596 @@
+openapi: 3.0.3
+info:
+  title: Maply Services API
+  version: 1.0.0
+  description: |
+    API REST de Maply Services: consulta y publicación colaborativa del estado en tiempo
+    real de establecimientos (hospitales, bancos, transporte, comercios, oficinas públicas).
+
+    **Autenticación:** JWT (HS256) con vencimiento de 1 día. Se obtiene en `POST /auth/login`
+    y se envía en el header `Authorization: Bearer <token>`. Al cerrar sesión el token queda
+    revocado (tabla `tokens_revocados`).
+
+    **Límites de uso (rate limit):** 100 pedidos por minuto por IP en toda la API, más los
+    límites específicos indicados en cada endpoint. Al superarlos se responde `429`.
+
+    **Errores:** siempre con el formato `{ "error": "mensaje" }`. Nunca se devuelven stack
+    traces ni errores de la base de datos.
+  contact:
+    name: Grupo 6 — 6° 2° — Maply Services
+    url: https://github.com/Practicas-Profesionalizantes/2026-6-2-Grupo_6--MaplySevices--
+servers:
+  - url: http://localhost:3000/api
+    description: Desarrollo local
+  - url: https://{dominio}/api
+    description: Producción (reemplazar por la URL del deploy)
+    variables:
+      dominio:
+        default: maply-backend.onrender.com
+tags:
+  - name: Autenticación
+    description: Registro, login, logout, recuperación de contraseña y baja de cuenta
+  - name: Lugares
+    description: Establecimientos que se muestran en el mapa
+  - name: Reportes
+    description: Reportes colaborativos del estado de cada lugar
+  - name: Administración
+    description: Acciones reservadas al rol administrador
+  - name: Estado
+    description: Verificación de que el servidor está activo
+
+paths:
+  /:
+    get:
+      tags: [Estado]
+      summary: Health check del servidor
+      description: Está fuera de `/api`; la URL completa es `http://localhost:3000/`.
+      servers:
+        - url: http://localhost:3000
+      responses:
+        '200':
+          description: Servidor activo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, example: true }
+
+  /auth/register:
+    post:
+      tags: [Autenticación]
+      summary: Registrar un usuario nuevo
+      description: 'Límite: 5 registros por hora por IP. La contraseña se guarda con bcrypt (costo 12).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegistroRequest' }
+      responses:
+        '201':
+          description: Cuenta creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_usuario: { type: integer, example: 12 }
+                  nombre: { type: string, example: Brunella }
+                  email: { type: string, example: brune@ejemplo.com }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '409':
+          description: Ya existe una cuenta con ese email
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: No se pudo crear la cuenta con ese email }
+        '429': { $ref: '#/components/responses/Limite' }
+        '500': { $ref: '#/components/responses/Interno' }
+
+  /auth/login:
+    post:
+      tags: [Autenticación]
+      summary: Iniciar sesión
+      description: 'Límite anti fuerza bruta: 5 intentos fallidos cada 15 minutos por IP.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Login correcto
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401':
+          description: Credenciales incorrectas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: Email o contraseña incorrectos }
+        '429': { $ref: '#/components/responses/Limite' }
+
+  /auth/logout:
+    post:
+      tags: [Autenticación]
+      summary: Cerrar sesión (revoca el token actual)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Sesión cerrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+              example: { mensaje: Sesión cerrada }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+
+  /auth/olvide-contrasena:
+    post:
+      tags: [Autenticación]
+      summary: Pedir código para recuperar la contraseña
+      description: |
+        Envía por email un código de 6 dígitos que vence en 15 minutos. Responde siempre lo
+        mismo, exista o no la cuenta, para no revelar qué emails están registrados.
+        Límite: 5 pedidos por hora por IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email, example: brune@ejemplo.com }
+      responses:
+        '200':
+          description: Pedido recibido
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+              example: { mensaje: 'Si el email tiene una cuenta, te mandamos un código.' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '429': { $ref: '#/components/responses/Limite' }
+
+  /auth/restablecer-contrasena:
+    post:
+      tags: [Autenticación]
+      summary: Cambiar la contraseña con el código recibido
+      description: Máximo 5 intentos por código; después hay que pedir uno nuevo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, codigo, contrasena]
+              properties:
+                email: { type: string, format: email, example: brune@ejemplo.com }
+                codigo: { type: string, pattern: '^\d{6}$', example: '482913' }
+                contrasena: { type: string, minLength: 8, maxLength: 72, example: NuevaClave2026 }
+      responses:
+        '200':
+          description: Contraseña actualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+              example: { mensaje: Contraseña actualizada. Ya podés iniciar sesión. }
+        '400':
+          description: Código incorrecto, vencido o sin intentos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429': { $ref: '#/components/responses/Limite' }
+
+  /auth/cuenta:
+    delete:
+      tags: [Autenticación]
+      summary: Eliminar la cuenta propia
+      description: Pide la contraseña de nuevo. Borra el usuario, sus reportes y sus tokens en una transacción (Ley 25.326 / requisitos de Google Play y App Store).
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contrasena]
+              properties:
+                contrasena: { type: string, example: MiClave2026 }
+      responses:
+        '200':
+          description: Cuenta eliminada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+              example: { mensaje: Cuenta eliminada }
+        '401':
+          description: Token inválido o contraseña incorrecta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /lugares:
+    get:
+      tags: [Lugares]
+      summary: Listar lugares activos
+      description: No requiere login. Ordenados por nombre y paginados.
+      parameters:
+        - name: categoria
+          in: query
+          schema: { $ref: '#/components/schemas/CategoriaLugar' }
+        - name: q
+          in: query
+          description: Búsqueda por nombre (máx. 100 caracteres)
+          schema: { type: string, example: hospital }
+        - name: pagina
+          in: query
+          description: Número de página (desde 1)
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limite
+          in: query
+          description: Lugares por página (máximo 100)
+          schema: { type: integer, minimum: 1, maximum: 100, default: 100 }
+      responses:
+        '200':
+          description: Lista de lugares
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Lugar' }
+    post:
+      tags: [Lugares]
+      summary: Proponer un lugar nuevo
+      description: 'Requiere login. Límite: 10 lugares por hora por usuario.'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LugarRequest' }
+      responses:
+        '201':
+          description: Lugar creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Lugar' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '429': { $ref: '#/components/responses/Limite' }
+
+  /reportes:
+    get:
+      tags: [Reportes]
+      summary: Listar los últimos 200 reportes activos
+      description: No requiere login. Nunca devuelve quién publicó cada reporte.
+      responses:
+        '200':
+          description: Lista de reportes, del más nuevo al más viejo
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Reporte' }
+    post:
+      tags: [Reportes]
+      summary: Publicar un reporte
+      description: |
+        Requiere login. Límite: 30 publicaciones por hora por usuario y un reporte por lugar
+        por hora. Cada reporte suma 1 punto de karma al autor (trigger en la base).
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReporteRequest' }
+      responses:
+        '201':
+          description: Reporte publicado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_reporte: { type: integer, example: 87 }
+                  id_lugar: { type: integer, example: 3 }
+                  contenido: { type: string, example: Hay como 20 personas esperando }
+                  categoria_reporte: { $ref: '#/components/schemas/CategoriaReporte' }
+        '400':
+          description: Datos inválidos o el lugar no existe
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '429':
+          description: Límite de publicaciones o ya reportó ese lugar en la última hora
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: Ya reportaste este lugar en la última hora }
+
+  /reportes/{id}:
+    get:
+      tags: [Reportes]
+      summary: Detalle de un reporte
+      parameters:
+        - $ref: '#/components/parameters/IdReporte'
+      responses:
+        '200':
+          description: Reporte encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reporte' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /reportes/lugar/{id_lugar}/estado-actual:
+    get:
+      tags: [Reportes]
+      summary: Estado actual de un lugar
+      description: Agrupa los reportes de la última hora por categoría y devuelve la más repetida como estado vigente.
+      parameters:
+        - name: id_lugar
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1, example: 3 }
+      responses:
+        '200':
+          description: Estado calculado (estado = null si no hubo reportes en la última hora)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EstadoActual' }
+
+  /reportes/{id}/traduccion:
+    get:
+      tags: [Reportes]
+      summary: Traducir el texto de un reporte (es ↔ en)
+      description: 'Usa el servicio MyMemory y guarda la traducción en caché. Límite: 60 por hora por IP.'
+      parameters:
+        - $ref: '#/components/parameters/IdReporte'
+        - name: idioma
+          in: query
+          required: true
+          schema: { type: string, enum: [es, en] }
+      responses:
+        '200':
+          description: Texto traducido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  texto: { type: string, example: There are about 20 people waiting }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '502':
+          description: El servicio de traducción no respondió
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /reportes/{id}/denuncias:
+    post:
+      tags: [Reportes]
+      summary: Denunciar un reporte
+      description: |
+        Requiere login. Cada usuario denuncia un reporte una sola vez. Con 3 denunciantes
+        distintos el reporte se oculta automáticamente y queda pendiente de revisión.
+        Límite: 20 denuncias por hora por usuario.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdReporte'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties:
+                motivo: { type: string, minLength: 3, maxLength: 255, example: Información falsa }
+      responses:
+        '201':
+          description: Denuncia registrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+              example: { mensaje: 'Gracias, vamos a revisar este reporte' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '429': { $ref: '#/components/responses/Limite' }
+
+  /admin/usuarios/{id}/bloqueo:
+    patch:
+      tags: [Administración]
+      summary: Bloquear o desbloquear un usuario
+      description: |
+        Solo para administradores (id_rol = ADMIN_ROL_ID). Bloquear es una baja lógica
+        (activo = 0): el usuario pierde el acceso al instante, aunque tenga un token vigente.
+        Un administrador no puede bloquear su propia cuenta.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1, example: 12 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bloqueado]
+              properties:
+                bloqueado: { type: boolean, example: true }
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_usuario: { type: integer, example: 12 }
+                  bloqueado: { type: boolean, example: true }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '403':
+          description: El usuario no es administrador
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: Solo para administradores }
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdReporte:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1, example: 87 }
+
+  responses:
+    Validacion:
+      description: Datos inválidos (devuelve solo el primer error)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: La contraseña debe tener entre 8 y 72 caracteres }
+    NoAutorizado:
+      description: Falta el token, es inválido, venció, fue revocado o la cuenta está inactiva
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Token inválido o expirado }
+    NoEncontrado:
+      description: No existe o está inactivo
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Reporte no encontrado }
+    Limite:
+      description: Se superó el límite de pedidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Demasiados intentos. Probá de nuevo en 15 minutos. }
+    Interno:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Error interno }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+    Mensaje:
+      type: object
+      properties:
+        mensaje: { type: string }
+    CategoriaLugar:
+      type: string
+      enum: [hospital, banco, restaurante, transporte, comercio, oficina_publica, otro]
+    CategoriaReporte:
+      type: string
+      enum: [mucha_fila, lugar_lleno, cerrado, demora, atencion_rapida, poco_movimiento, cambio_recorrido, otro]
+    RegistroRequest:
+      type: object
+      required: [nombre, email, contrasena, acepta_terminos]
+      properties:
+        nombre: { type: string, minLength: 1, maxLength: 100, example: Brunella }
+        email: { type: string, format: email, maxLength: 150, example: brune@ejemplo.com }
+        contrasena:
+          type: string
+          minLength: 8
+          maxLength: 72
+          description: Al menos una letra y un número
+          example: MiClave2026
+        telefono: { type: string, pattern: '^[0-9+\-\s()]{6,20}$', example: '+54 11 5555-1234' }
+        acepta_terminos:
+          type: string
+          enum: ['true']
+          description: Debe ser "true" (aceptación de términos y política de privacidad)
+    LoginRequest:
+      type: object
+      required: [email, contrasena]
+      properties:
+        email: { type: string, format: email, example: brune@ejemplo.com }
+        contrasena: { type: string, example: MiClave2026 }
+    LoginResponse:
+      type: object
+      properties:
+        token: { type: string, example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... }
+        usuario:
+          type: object
+          properties:
+            id_usuario: { type: integer, example: 12 }
+            nombre: { type: string, example: Brunella }
+            email: { type: string, example: brune@ejemplo.com }
+            fecha_registro: { type: string, format: date-time }
+    LugarRequest:
+      type: object
+      required: [nombre, categoria]
+      properties:
+        nombre: { type: string, minLength: 2, maxLength: 150, example: Hospital Fernández }
+        categoria: { $ref: '#/components/schemas/CategoriaLugar' }
+        latitud: { type: number, minimum: -90, maximum: 90, nullable: true, example: -34.5813 }
+        longitud: { type: number, minimum: -180, maximum: 180, nullable: true, example: -58.4064 }
+        direccion: { type: string, maxLength: 255, nullable: true, example: 'Cerviño 3356, CABA' }
+    Lugar:
+      allOf:
+        - type: object
+          properties:
+            id_lugar: { type: integer, example: 3 }
+        - $ref: '#/components/schemas/LugarRequest'
+    ReporteRequest:
+      type: object
+      required: [id_lugar, categoria_reporte]
+      properties:
+        id_lugar: { type: integer, minimum: 1, example: 3 }
+        categoria_reporte: { $ref: '#/components/schemas/CategoriaReporte' }
+        contenido: { type: string, maxLength: 500, nullable: true, example: Hay como 20 personas esperando }
+    Reporte:
+      type: object
+      properties:
+        id_reporte: { type: integer, example: 87 }
+        id_lugar: { type: integer, example: 3 }
+        contenido: { type: string, example: Hay como 20 personas esperando }
+        categoria_reporte: { $ref: '#/components/schemas/CategoriaReporte' }
+        fecha_registro: { type: string, format: date-time }
+        lugar:
+          type: object
+          properties:
+            nombre: { type: string, example: Hospital Fernández }
+            categoria: { $ref: '#/components/schemas/CategoriaLugar' }
+            latitud: { type: number, example: -34.5813 }
+            longitud: { type: number, example: -58.4064 }
+    EstadoActual:
+      type: object
+      properties:
+        id_lugar: { type: integer, example: 3 }
+        estado:
+          allOf: [{ $ref: '#/components/schemas/CategoriaReporte' }]
+          nullable: true
+        total_reportes: { type: integer, example: 5 }
+        mensaje: { type: string, example: Sin reportes en la última hora }
+        desglose:
+          type: array
+          items:
+            type: object
+            properties:
+              categoria_reporte: { $ref: '#/components/schemas/CategoriaReporte' }
+              total: { type: integer, example: 4 }
