@@ -56,7 +56,7 @@ export default function LoginScreen() {
         />
 
         <Pressable onPress={() => router.push('/olvide-contrasena')} accessibilityRole="link" className="min-h-11 justify-center self-end">
-          <Text className="font-nunito8 text-sm text-boton">{t('auth.forgotLink')}</Text>
+          <Text className="font-nunito8 text-sm text-enlace">{t('auth.forgotLink')}</Text>
         </Pressable>
       </ScrollView>
 
@@ -64,7 +64,7 @@ export default function LoginScreen() {
         <Boton titulo={t('auth.loginSubmit')} cargando={enviando} onPress={onSubmit} />
         <Pressable onPress={() => router.replace('/register')} accessibilityRole="link" className="min-h-12 items-center justify-center">
           <Text className="font-nunito8 text-base text-secundario">
-            {t('auth.noAccount')} <Text className="font-nunito9 text-boton">{t('auth.registerLink')}</Text>
+            {t('auth.noAccount')} <Text className="font-nunito9 text-enlace">{t('auth.registerLink')}</Text>
           </Text>
         </Pressable>
       </View>

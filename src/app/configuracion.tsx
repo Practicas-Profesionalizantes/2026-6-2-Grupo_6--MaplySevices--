@@ -90,7 +90,7 @@ export default function ConfiguracionScreen() {
                 {usuario.email}
               </Text>
               {miembroDesde ? (
-                <Text className="mt-0.5 font-nunito8 text-sm text-boton">{t('config.memberSince', { fecha: miembroDesde })}</Text>
+                <Text className="mt-0.5 font-nunito8 text-sm text-enlace">{t('config.memberSince', { fecha: miembroDesde })}</Text>
               ) : null}
             </View>
           </View>

@@ -91,7 +91,7 @@ export default function OlvideContrasenaScreen() {
             <Boton titulo={t('auth.resetSubmit')} cargando={enviando} onPress={onCambiar} />
 
             <Pressable disabled={enviando} onPress={onPedirCodigo} accessibilityRole="button" className="mt-2 min-h-12 items-center justify-center">
-              <Text className="font-nunito8 text-base text-boton">{t('auth.resendCode')}</Text>
+              <Text className="font-nunito8 text-base text-enlace">{t('auth.resendCode')}</Text>
             </Pressable>
           </>
         ) : (

@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { MapaMaply } from '@/components/MapaMaply';
 import { textoDelReporte } from '@/components/ReportCard';
-import { BotonRedondo, Boton, ICONOS_ESTADO, haceCuanto, volver } from '@/components/ui';
+import { BotonRedondo, Boton, EstadoVacio, ICONOS_ESTADO, haceCuanto, volver } from '@/components/ui';
 import { colorEstado, textoEstado, useColores } from '@/constants/Colors';
 import { denunciarReporte, getReporteDetalle, getUsuarioActual, getEstadoActualLugar, traducirReporte, type Reporte, type EstadoActualLugar } from '@/services/api';
 
@@ -19,13 +19,19 @@ export default function ReportDetailsScreen() {
   const [reporte, setReporte] = useState<Reporte | null>(null);
   const [estadoActual, setEstadoActual] = useState<EstadoActualLugar | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [intento, setIntento] = useState(0);
 
   useEffect(() => {
     if (!id) return;
+    setLoading(true);
+    setError(false);
     getReporteDetalle(id)
       .then(setReporte)
+      // 404 = el reporte no existe (o lo ocultaron por denuncias); otro error = conexión.
+      .catch((e) => setError(!/no encontrado/i.test(e.message)))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, intento]);
 
   // Una vez que sabemos a qué lugar pertenece el reporte, pedimos el
   // "estado actual" (resumen de los reportes de la última hora para ese
@@ -170,7 +176,7 @@ export default function ReportDetailsScreen() {
                     <Text className="mt-1 font-nunito text-xs text-secundario">{t('reportDetails.translatedBy')}</Text>
                   ) : null}
                   <Pressable disabled={traduciendo} onPress={onTraducir} accessibilityRole="button" className="mt-1 min-h-11 justify-center self-start">
-                    <Text className="font-nunito8 text-sm text-boton">
+                    <Text className="font-nunito8 text-sm text-enlace">
                       {traduciendo
                         ? t('reportDetails.translating')
                         : traduccion
@@ -186,8 +192,16 @@ export default function ReportDetailsScreen() {
               <Boton titulo={t('reportDetails.report')} variante="peligro" icono="flag-outline" onPress={pedirDenuncia} />
             </View>
           </ScrollView>
+        ) : error ? (
+          <EstadoVacio
+            icono="cloud-offline-outline"
+            titulo={t('reportDetails.errorTitle')}
+            detalle={t('common.checkConnection')}
+            accion={t('common.retry')}
+            onAccion={() => setIntento((i) => i + 1)}
+          />
         ) : (
-          <Text className="p-5 font-nunito text-base text-secundario">{t('reportDetails.notFound')}</Text>
+          <EstadoVacio icono="document-outline" titulo={t('reportDetails.notFound')} />
         )}
       </View>
     </View>

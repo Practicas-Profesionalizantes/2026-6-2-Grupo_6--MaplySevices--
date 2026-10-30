@@ -79,7 +79,7 @@ export default function CreateReportScreen() {
               </Text>
             ) : null}
           </View>
-          {lugar ? <Text className="font-nunito8 text-base text-boton">{t('createReport.change')}</Text> : null}
+          {lugar ? <Text className="font-nunito8 text-base text-enlace">{t('createReport.change')}</Text> : null}
           {!lugar ? <Ionicons name="chevron-forward" size={20} color={c.secundario} /> : null}
         </Pressable>
 

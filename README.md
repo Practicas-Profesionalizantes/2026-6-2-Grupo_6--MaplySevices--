@@ -1,48 +1,35 @@
-# Maply Services — Frontend (armado de cero)
+# Maply Services — App móvil (React Native + Expo)
 
-Este proyecto reemplaza al frontend anterior (el que estaba en `maply-services-app.rar`,
-hecho con ayuda de otra IA). Se generó con `create-expo-app` oficial y a partir de ahí
-se le sumaron, a mano, las piezas que ya habíamos definido en el chat de Claude.
+App para consultar y reportar en tiempo real el estado de lugares cercanos (filas, demoras, cierres) sobre un mapa.
 
-## Qué tiene
+## Tecnologías
 
-- **Expo Router + TypeScript**, rutas en `src/app/`: `index.tsx` (home con reportes),
-  `create-report.tsx` (nuevo reporte), `report-details.tsx` (detalle).
-- **NativeWind (Tailwind para React Native)**, con la paleta pastel de marca ya
-  cargada por nombre en `tailwind.config.js` y en `src/constants/Colors.ts`
-  (`maply-celeste`, `maply-azul`, `maply-violeta`, `maply-lila`).
-- **`src/components/MapaMaply.tsx`**: la capa de abstracción sobre el mapa. Ninguna
-  pantalla debería importar `@rnmapbox/maps` directamente — todas pasan por acá
-  (`mostrarPin`, `buscarLugar`, `centrarEn`), para que cambiar de proveedor de mapa
-  el día de mañana sea editar un solo archivo.
-- **i18n** (`i18next` + `react-i18next` + `expo-localization`) con `src/locales/es.json`
-  y `src/locales/en.json`, detectando el idioma del dispositivo por default.
-- **`src/services/api.ts`**: toda la conexión al backend de Node/Express (el de Felipe)
-  pasa por acá, leyendo `EXPO_PUBLIC_API_URL` desde `.env`.
+- **Expo + Expo Router + TypeScript**: pantallas en `src/app/`.
+- **NativeWind** (Tailwind para React Native) con tokens de color de marca en `src/constants/Colors.ts`, modo claro y oscuro con contraste WCAG AA.
+- **Mapbox** (`@rnmapbox/maps`) detrás de `src/components/MapaMaply.tsx`: ninguna pantalla usa Mapbox directo.
+- **i18n** español / inglés (`src/locales/`), según el idioma del celular.
+- **`src/services/api.ts`**: toda la conexión con la API REST del backend.
 
 ## Cómo correrlo
 
-1. Copiar `.env.example` a `.env` y completar `EXPO_PUBLIC_API_URL` (URL del backend
-   corriendo local) y `EXPO_PUBLIC_MAPBOX_TOKEN` (desde mapbox.com — mientras no lo
-   completes, `MapaMaply` muestra un placeholder en vez de romper).
-2. `npm install` (si no lo corriste ya).
-3. `npx expo start` y abrir en Expo Go o en el navegador.
+1. Copiar `.env.example` a `.env` y completar `EXPO_PUBLIC_API_URL` (URL del backend) y `EXPO_PUBLIC_MAPBOX_TOKEN` (mapbox.com → Access tokens).
+2. `npm install`
+3. `npx expo start`
 
-## Boilerplate del template que se puede borrar
+El mapa de Mapbox no funciona en Expo Go: para verlo hace falta un development build o el APK.
 
-`create-expo-app` trae de fábrica una demo (pantalla de bienvenida con tabs, ícono
-animado, etc.) que no usamos. Quedó sin tocar por si querés mirarla de referencia,
-pero se puede borrar tranquilamente:
+## Generar el APK (Android)
 
-- `src/app/explore.tsx`
-- `src/components/animated-icon*.tsx`, `animated-icon.module.css`
-- `src/components/app-tabs*.tsx`
-- `src/components/hint-row.tsx`
-- `src/components/themed-text.tsx`, `themed-view.tsx`
-- `src/components/web-badge.tsx`
-- `src/components/ui/collapsible.tsx`
-- `scripts/reset-project.js` (y el script `reset-project` en `package.json`)
+```
+npm install -g eas-cli
+eas login
+eas build -p android --profile preview
+```
 
-Nada de esto es del proyecto anterior de Valentina — es la demo estándar que trae
-Expo para cualquier proyecto nuevo. Se puede borrar sin miedo, `index.tsx` y
-`_layout.tsx` ya no la usan.
+El perfil `preview` de `eas.json` genera un APK instalable directo. Las variables `EXPO_PUBLIC_*` hay que cargarlas también en expo.dev → Project → Environment variables. Más detalle en el **Manual de Deploy - Maply Services**.
+
+## Accesibilidad
+
+- Todos los botones tienen rol y etiqueta para TalkBack; los íconos decorativos se ocultan del lector.
+- El texto respeta el tamaño de fuente del sistema (los contenedores usan alto mínimo, no fijo).
+- Cada pantalla que carga datos tiene estado de carga, vacío y de error con "Reintentar".

@@ -7,7 +7,10 @@
     "loading": "Cargando reportes...",
     "updated": "Actualizado hace un momento",
     "settings": "Configuración",
-    "myLocation": "Mi ubicación"
+    "myLocation": "Mi ubicación",
+    "errorTitle": "No pudimos cargar los reportes",
+    "emptyTitle": "Todavía no hay reportes",
+    "sessionLabel": "Sesión de {{nombre}}. Tocá para cerrar sesión"
   },
   "createReport": {
     "title": "Nuevo reporte",
@@ -45,7 +48,9 @@
       "oficina_publica": "Oficina pública",
       "otro": "Otro"
     },
-    "title": "Elegir lugar"
+    "title": "Elegir lugar",
+    "errorTitle": "No pudimos cargar los lugares",
+    "emptySearch": "No encontramos lugares con ese nombre"
   },
   "reportDetails": {
     "title": "Detalle del reporte",
@@ -64,7 +69,8 @@
     "translating": "Traduciendo...",
     "translatedBy": "Traducido automáticamente",
     "thisReport": "Este reporte",
-    "back": "Volver"
+    "back": "Volver",
+    "errorTitle": "No pudimos cargar el reporte"
   },
   "config": {
     "title": "Configuración",
@@ -138,5 +144,9 @@
     "minutos": "hace {{count}} min",
     "horas": "hace {{count}} h",
     "dias": "hace {{count}} d"
+  },
+  "common": {
+    "retry": "Reintentar",
+    "checkConnection": "Revisá tu conexión a internet y probá de nuevo."
   }
 }

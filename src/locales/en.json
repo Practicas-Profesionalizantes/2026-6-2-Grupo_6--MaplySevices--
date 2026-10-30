@@ -7,7 +7,10 @@
     "loading": "Loading reports...",
     "updated": "Updated just now",
     "settings": "Settings",
-    "myLocation": "My location"
+    "myLocation": "My location",
+    "errorTitle": "We couldn't load the reports",
+    "emptyTitle": "No reports yet",
+    "sessionLabel": "{{nombre}}'s session. Tap to log out"
   },
   "createReport": {
     "title": "New report",
@@ -45,7 +48,9 @@
       "oficina_publica": "Public office",
       "otro": "Other"
     },
-    "title": "Choose place"
+    "title": "Choose place",
+    "errorTitle": "We couldn't load the places",
+    "emptySearch": "No places match that name"
   },
   "reportDetails": {
     "title": "Report details",
@@ -64,7 +69,8 @@
     "translating": "Translating...",
     "translatedBy": "Automatically translated",
     "thisReport": "This report",
-    "back": "Back"
+    "back": "Back",
+    "errorTitle": "We couldn't load the report"
   },
   "config": {
     "title": "Settings",
@@ -138,5 +144,9 @@
     "minutos": "{{count}} min ago",
     "horas": "{{count}} h ago",
     "dias": "{{count}} d ago"
+  },
+  "common": {
+    "retry": "Try again",
+    "checkConnection": "Check your internet connection and try again."
   }
 }

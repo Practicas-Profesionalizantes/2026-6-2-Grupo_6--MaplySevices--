@@ -9,7 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { MapaMaply, type LugarPin, type MapaMaplyHandle } from '@/components/MapaMaply';
 import { ReportCard } from '@/components/ReportCard';
-import { Boton, BotonRedondo, Tocable, sombraSuave } from '@/components/ui';
+import { Boton, BotonRedondo, EstadoVacio, Tocable, etiquetaReporte, sombraSuave } from '@/components/ui';
+import { textoDelReporte } from '@/components/ReportCard';
 import { useColores } from '@/constants/Colors';
 import { bienvenidaVista, getReportes, getUsuarioActual, logout, type Reporte, type Usuario } from '@/services/api';
 import { useUbicacionActual } from '@/hooks/use-ubicacion';
@@ -36,6 +37,8 @@ function HomeScreen() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [elegidoId, setElegidoId] = useState<number | null>(null);
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
+  // Al sumarle 1 se vuelven a pedir los reportes (botón "Reintentar").
+  const [intento, setIntento] = useState(0);
   const mapaRef = useRef<MapaMaplyHandle>(null);
   const { ubicacion } = useUbicacionActual();
 
@@ -58,7 +61,7 @@ function HomeScreen() {
       return () => {
         activo = false;
       };
-    }, [])
+    }, [intento])
   );
 
   // Apenas tenemos la ubicación real del usuario (puede tardar un toque en
@@ -144,6 +147,7 @@ function HomeScreen() {
         <View className="rounded-[14px] bg-superficie" style={sombraSuave}>
           <Image
             source={require('@/assets/images/logo.png')}
+            accessibilityRole="image"
             accessibilityLabel="Maply"
             style={{ width: 48, height: 48, borderRadius: 14 }}
           />
@@ -156,13 +160,14 @@ function HomeScreen() {
           />
           <Tocable
             onPress={usuario ? () => setCerrandoSesion(true) : () => router.push('/login')}
-            className="h-12 flex-row items-center gap-2 rounded-full border border-borde bg-superficie pl-1.5 pr-4"
+            accessibilityLabel={usuario ? t('home.sessionLabel', { nombre: usuario.nombre }) : t('auth.loginLink')}
+            className="min-h-12 flex-row items-center gap-2 rounded-full border border-borde bg-superficie pl-1.5 pr-4"
             style={sombraSuave}
           >
             {usuario ? (
               <>
                 <View className="h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: c.boton + '26' }}>
-                  <Text className="font-nunito9 text-base" style={{ color: c.boton }}>
+                  <Text className="font-nunito9 text-base" style={{ color: c.enlace }}>
                     {usuario.nombre.trim().charAt(0).toUpperCase()}
                   </Text>
                 </View>
@@ -205,7 +210,7 @@ function HomeScreen() {
               </View>
               <Tocable
                 onPress={onNuevoReportePress}
-                className="h-12 flex-row items-center gap-1.5 rounded-full bg-boton px-5"
+                className="min-h-12 flex-row items-center gap-1.5 rounded-full bg-boton px-5"
                 style={{ shadowColor: c.boton, shadowOpacity: 0.35, shadowRadius: 10, elevation: 4 }}
               >
                 <Ionicons name="add" size={22} color="#FFFFFF" />
@@ -218,18 +223,28 @@ function HomeScreen() {
         {loading ? (
           <ActivityIndicator color={c.boton} className="mt-4" />
         ) : error ? (
-          <Text className="px-5 font-nunito text-base text-secundario">{error}</Text>
+          <EstadoVacio
+            icono="cloud-offline-outline"
+            titulo={t('home.errorTitle')}
+            detalle={t('common.checkConnection')}
+            accion={t('common.retry')}
+            onAccion={() => setIntento((i) => i + 1)}
+          />
         ) : (
           <FlatList
             data={reportes}
             keyExtractor={(item) => String(item.id_reporte)}
             renderItem={({ item }) => (
-              <Pressable onPress={() => abrirReporte(item.id_reporte)} accessibilityRole="button">
+              <Pressable
+                onPress={() => abrirReporte(item.id_reporte)}
+                accessibilityRole="button"
+                accessibilityLabel={etiquetaReporte(item, t, textoDelReporte(item))}
+              >
                 <ReportCard reporte={item} />
               </Pressable>
             )}
             ItemSeparatorComponent={() => <View className="h-2.5" />}
-            ListEmptyComponent={<Text className="font-nunito text-base text-secundario">{t('home.empty')}</Text>}
+            ListEmptyComponent={<EstadoVacio icono="map-outline" titulo={t('home.emptyTitle')} detalle={t('home.empty')} />}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 24 }}
           />
         )}

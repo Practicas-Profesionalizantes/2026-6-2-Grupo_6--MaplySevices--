@@ -115,7 +115,7 @@ export default function RegisterScreen() {
           </View>
           <Text className="flex-1 font-nunito text-[15px] leading-5 text-secundario">
             {t('legal.accept')}{' '}
-            <Link href="/legal" style={{ color: c.boton, fontFamily: 'Nunito_800ExtraBold', textDecorationLine: 'underline' }}>
+            <Link href="/legal" style={{ color: c.enlace, fontFamily: 'Nunito_800ExtraBold', textDecorationLine: 'underline' }}>
               {t('legal.linkText')}
             </Link>
           </Text>
@@ -126,7 +126,7 @@ export default function RegisterScreen() {
         <Boton titulo={t('auth.registerSubmit')} cargando={enviando} onPress={onSubmit} />
         <Pressable onPress={() => router.replace('/login')} accessibilityRole="link" className="min-h-12 items-center justify-center">
           <Text className="font-nunito8 text-base text-secundario">
-            {t('auth.haveAccount')} <Text className="font-nunito9 text-boton">{t('auth.loginTitle')}</Text>
+            {t('auth.haveAccount')} <Text className="font-nunito9 text-enlace">{t('auth.loginTitle')}</Text>
           </Text>
         </Pressable>
       </View>

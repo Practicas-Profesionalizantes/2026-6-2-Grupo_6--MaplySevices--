@@ -14,6 +14,7 @@ export const Temas = {
     secundario: '#5A6480',
     borde: '#E6EAF3',
     boton: '#3E50E3',
+    enlace: '#3E50E3',
     peligro: '#C0263A',
   },
   dark: {
@@ -23,7 +24,9 @@ export const Temas = {
     texto: '#EEF1FA',
     secundario: '#9AA3C0',
     borde: '#252B4A',
-    boton: '#5B6BFF',
+    // Contraste WCAG AA: texto blanco sobre el botón 4.7:1, enlaces sobre el fondo ≥ 4.5:1.
+    boton: '#5263F5',
+    enlace: '#8C98FF',
     peligro: '#FF6B7A',
   },
 };

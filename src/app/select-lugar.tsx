@@ -5,7 +5,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Encabezado, ICONOS_LUGAR } from '@/components/ui';
+import { Encabezado, EstadoVacio, ICONOS_LUGAR } from '@/components/ui';
 import { useColores } from '@/constants/Colors';
 import { getLugares, type Lugar } from '@/services/api';
 import { CATEGORIAS_LUGAR } from '@/constants/categoriasLugar';
@@ -26,6 +26,8 @@ export default function SelectLugarScreen() {
   const [busqueda, setBusqueda] = useState('');
   const [busquedaDebounced, setBusquedaDebounced] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [intento, setIntento] = useState(0);
   const [foco, setFoco] = useState(false);
 
   useEffect(() => {
@@ -37,13 +39,15 @@ export default function SelectLugarScreen() {
     useCallback(() => {
       let activo = true;
       setLoading(true);
+      setError(false);
       getLugares(categoria ?? undefined, busquedaDebounced || undefined)
         .then((data) => activo && setLugares(data))
+        .catch(() => activo && setError(true))
         .finally(() => activo && setLoading(false));
       return () => {
         activo = false;
       };
-    }, [categoria, busquedaDebounced])
+    }, [categoria, busquedaDebounced, intento])
   );
 
   function onSeleccionar(lugar: Lugar) {
@@ -60,7 +64,7 @@ export default function SelectLugarScreen() {
         accessibilityRole="button"
         accessibilityState={{ selected: activo }}
         hitSlop={{ top: 3, bottom: 3 }}
-        className={`h-[38px] justify-center rounded-[19px] px-4 ${activo ? 'bg-texto' : 'border border-borde bg-superficie'}`}
+        className={`min-h-[38px] justify-center rounded-[19px] px-4 ${activo ? 'bg-texto' : 'border border-borde bg-superficie'}`}
       >
         <Text className={`font-nunito8 text-[15px] ${activo ? 'text-fondo' : 'text-texto'}`}>{texto}</Text>
       </Pressable>
@@ -96,8 +100,16 @@ export default function SelectLugarScreen() {
 
       {loading ? (
         <ActivityIndicator color={c.boton} />
+      ) : error ? (
+        <EstadoVacio
+          icono="cloud-offline-outline"
+          titulo={t('selectLugar.errorTitle')}
+          detalle={t('common.checkConnection')}
+          accion={t('common.retry')}
+          onAccion={() => setIntento((i) => i + 1)}
+        />
       ) : lugares.length === 0 ? (
-        <Text className="font-nunito text-base text-secundario">{t('selectLugar.empty')}</Text>
+        <EstadoVacio icono="search-outline" titulo={busquedaDebounced ? t('selectLugar.emptySearch') : t('selectLugar.empty')} />
       ) : (
         <View className="flex-shrink overflow-hidden rounded-[20px] border border-borde bg-tarjeta">
           <FlatList
@@ -110,7 +122,12 @@ export default function SelectLugarScreen() {
                 accessibilityRole="button"
                 className="min-h-[72px] flex-row items-center gap-4 px-4 py-3"
               >
-                <View className="h-12 w-12 items-center justify-center rounded-2xl" style={{ backgroundColor: c.boton + '1F' }}>
+                <View
+                  className="h-12 w-12 items-center justify-center rounded-2xl"
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  style={{ backgroundColor: c.boton + '1F' }}
+                >
                   <Ionicons name={ICONOS_LUGAR[item.categoria] ?? 'location-outline'} size={24} color={c.boton} />
                 </View>
                 <View className="flex-1">

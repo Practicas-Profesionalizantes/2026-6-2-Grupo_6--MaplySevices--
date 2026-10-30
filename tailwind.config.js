@@ -16,6 +16,7 @@ module.exports = {
         secundario: tema('secundario'),
         borde: tema('borde'),
         boton: tema('boton'),
+        enlace: tema('enlace'),
         peligro: tema('peligro'),
       },
       // En Android cada peso de Nunito es una fuente aparte: el peso se elige

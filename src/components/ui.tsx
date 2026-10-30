@@ -193,11 +193,55 @@ export function IconoEstado({ categoria, tamano = 52 }: { categoria: string; tam
   return (
     <View
       className="items-center justify-center"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={{ width: tamano, height: tamano, borderRadius: tamano * 0.3, backgroundColor: fondoEstado(categoria) }}
     >
       <Ionicons name={ICONOS_ESTADO[categoria] ?? 'ellipsis-horizontal'} size={tamano * 0.46} color={colorEstado(categoria)} />
     </View>
   );
+}
+
+// Estado vacío o de error: ícono, mensaje y, si hay, un botón (ej. "Reintentar").
+export function EstadoVacio({
+  icono,
+  titulo,
+  detalle,
+  accion,
+  onAccion,
+}: {
+  icono: IconName;
+  titulo: string;
+  detalle?: string;
+  accion?: string;
+  onAccion?: () => void;
+}) {
+  const c = useColores();
+  return (
+    <View className="items-center px-6 py-8" accessibilityRole="summary">
+      <View className="mb-3 h-14 w-14 items-center justify-center rounded-full bg-borde">
+        <Ionicons name={icono} size={26} color={c.secundario} />
+      </View>
+      <Text className="text-center font-nunito8 text-[17px] text-texto">{titulo}</Text>
+      {detalle ? <Text className="mt-1 text-center font-nunito text-[15px] text-secundario">{detalle}</Text> : null}
+      {accion && onAccion ? (
+        <View className="mt-4 self-stretch">
+          <Boton titulo={accion} variante="neutro" icono="refresh" onPress={onAccion} />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+// Lo que lee TalkBack de una tarjeta de reporte, en una sola frase.
+export function etiquetaReporte(
+  r: { categoria_reporte: string; fecha_registro: string; lugar?: { nombre?: string } | null },
+  t: TFunction,
+  texto?: string | null
+) {
+  return [t(`createReport.categorias.${r.categoria_reporte}`, r.categoria_reporte), r.lugar?.nombre, haceCuanto(r.fecha_registro, t), texto]
+    .filter(Boolean)
+    .join(', ');
 }
 
 export function haceCuanto(fechaIso: string, t: TFunction) {
