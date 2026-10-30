@@ -16,11 +16,17 @@ const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/authRoutes');
 const reportesRoutes = require('./routes/reportesRoutes');
 const lugaresRoutes = require('./routes/lugaresRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const swaggerUi = require('swagger-ui-express');
 
 const app = express();
 // Solo con un proxy real adelante (TRUST_PROXY=1 en el .env). Sin proxy, confiar
 // en X-Forwarded-For deja que cualquiera invente su IP y esquive los rate limits.
 app.set('trust proxy', Number(process.env.TRUST_PROXY) || false);
+// Documentación interactiva (Swagger). Va antes de helmet porque su política
+// de contenido bloquearía los estilos y scripts de Swagger UI.
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(require('../openapi.json')));
+
 app.use(helmet()); // headers de seguridad + saca x-powered-by
 
 // La app nativa no manda Origin, así que pasa. Solo se restringe la versión web (navegador).
@@ -35,6 +41,7 @@ app.get('/', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/reportes', reportesRoutes);
 app.use('/api/lugares', lugaresRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'No encontrado' }));
 // Nunca devolver stack traces ni errores de la base al cliente.

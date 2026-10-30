@@ -20,13 +20,19 @@ async function getLugares(req, res) {
       condiciones.push('nombre LIKE ?');
       params.push(`%${q.trim()}%`);
     }
+    // Paginación (SCRUM-381): ?pagina=1&limite=50. Sin parámetros devuelve la
+    // primera página de 100, así las pantallas que ya existen siguen igual.
+    const limite = Math.min(Math.max(parseInt(req.query.limite, 10) || 100, 1), 100);
+    const pagina = Math.max(parseInt(req.query.pagina, 10) || 1, 1);
     const [filas] = await pool.query(
       `SELECT id_lugar, nombre, categoria, latitud, longitud, direccion
        FROM lugar
        WHERE ${condiciones.join(' AND ')}
-       ORDER BY nombre ASC`,
-      params
+       ORDER BY nombre ASC
+       LIMIT ? OFFSET ?`,
+      [...params, limite, (pagina - 1) * limite]
     );
+    res.set('X-Pagina', String(pagina));
     res.json(filas);
   } catch (error) {
     console.error(error);

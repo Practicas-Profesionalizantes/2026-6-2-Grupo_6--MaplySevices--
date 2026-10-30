@@ -1,44 +1,61 @@
 # Maply Services — Backend (Node + Express + MySQL)
 
-## De dónde sale este código
-
-En el repo de GitHub (rama `Documentación`) ya existían dos archivos sueltos en la
-raíz: `authRoutes.js` y `userRegistration.js` (este último vacío). No había
-`controllers/authController.js`, ni `server.js`, ni conexión a la base de datos, así
-que no era posible correr un servidor todavía. Esta carpeta completa esas piezas
-que faltaban, respetando el diseño que ya estaba pensado (mismas rutas, mismos
-nombres de función, misma idea de validación en `userRegistration.js`).
-
-**Importante:** si Felipe tiene más avance de esto guardado localmente y todavía no
-lo subió al repo, convendría comparar antes de que esto reemplace su trabajo — esta
-carpeta es un punto de partida funcional, no necesariamente la versión final.
+API REST de Maply Services: usuarios, lugares y reportes colaborativos del estado de cada lugar.
 
 ## Instalar y correr
 
 1. Levantar XAMPP → iniciar los módulos **Apache** y **MySQL**.
-2. Ir a `http://localhost/phpmyadmin`, crear una base llamada `maply_services` e
-   importar `SQL - Maply Services.sql` (Importar → elegir archivo → Continuar).
+2. Ir a `http://localhost/phpmyadmin`, crear una base llamada `maply_services` e importar, en este orden:
+   1. `SQL - Maply Services.sql`
+   2. `sql/tokens_revocados.sql`
+   3. `sql/karma.sql`
+   4. `sql/recuperacion_contrasena.sql`
+   5. `sql/traduccion_reporte.sql`
+   6. `sql/denuncias.sql`
+   7. `sql/indices.sql`
 3. `npm install`
-4. `cp .env.example .env` y completar los datos (con XAMPP por defecto:
-   usuario `root`, contraseña vacía).
+4. `cp .env.example .env` y completar los datos (con XAMPP por defecto: usuario `root`, contraseña vacía).
 5. `npm run dev`
 
 Si arranca bien vas a ver en la terminal:
 `Servidor de Maply Services escuchando en http://localhost:3000`
 
-Podés probarlo abriendo `http://localhost:3000` en el navegador — debería devolver
-un JSON `{"ok":true,...}`.
+## Documentación de la API (Swagger)
 
-## Endpoints disponibles
+Con el servidor corriendo: **http://localhost:3000/api-docs**
 
-- `POST /api/auth/register` — `{ nombre, email, contrasena, telefono? }`
-- `POST /api/auth/login` — `{ email, contrasena }` → devuelve `{ token, usuario }`
-- `POST /api/auth/logout` — requiere header `Authorization: Bearer <token>`
-- `GET /api/reportes` — lista de reportes activos
-- `GET /api/reportes/:id` — detalle de un reporte
-- `POST /api/reportes` — requiere `Authorization: Bearer <token>`, body
-  `{ id_lugar, contenido, categoria_reporte }`
+La especificación completa está en `openapi.json` (OpenAPI 3.0).
 
-Esto es exactamente lo que ya espera `src/services/api.ts` en el proyecto de frontend
-(`maply-frontend`), así que apuntando `EXPO_PUBLIC_API_URL=http://localhost:3000/api`
-en el `.env` del frontend, debería conectar sin cambios.
+## Tests
+
+```
+npm test
+```
+
+Corre los tests unitarios de `test/` con el runner que trae Node (`node --test`). No necesitan la base de datos: el pool de MySQL se reemplaza por uno simulado.
+
+## Endpoints
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| POST | `/api/auth/register` | No | Registrar usuario |
+| POST | `/api/auth/login` | No | Iniciar sesión → `{ token, usuario }` |
+| POST | `/api/auth/logout` | Sí | Cerrar sesión (revoca el token) |
+| POST | `/api/auth/olvide-contrasena` | No | Código de recuperación por mail |
+| POST | `/api/auth/restablecer-contrasena` | No | Cambiar contraseña con el código |
+| DELETE | `/api/auth/cuenta` | Sí | Eliminar la cuenta propia |
+| GET | `/api/lugares` | No | Listar lugares (`?categoria=` `?q=`) |
+| POST | `/api/lugares` | Sí | Proponer un lugar |
+| GET | `/api/reportes` | No | Últimos 200 reportes |
+| POST | `/api/reportes` | Sí | Publicar un reporte |
+| GET | `/api/reportes/:id` | No | Detalle de un reporte |
+| GET | `/api/reportes/lugar/:id_lugar/estado-actual` | No | Estado del lugar en la última hora |
+| GET | `/api/reportes/:id/traduccion?idioma=` | No | Traducir un reporte (es/en) |
+| POST | `/api/reportes/:id/denuncias` | Sí | Denunciar un reporte |
+| PATCH | `/api/admin/usuarios/:id/bloqueo` | Admin | Bloquear o desbloquear un usuario |
+
+Auth = header `Authorization: Bearer <token>`. Admin = además, `id_rol` igual a `ADMIN_ROL_ID` del `.env`.
+
+## Deploy
+
+Ver el **Manual de Deploy - Maply Services**.
