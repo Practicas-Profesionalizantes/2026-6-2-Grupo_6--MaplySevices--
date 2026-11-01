@@ -4,3 +4,4 @@ node_modules/
 # Dumps de la base con datos reales (no subir)
 maply_services.sql
 maply_services_prod.sql
+ca.pem

@@ -22,10 +22,10 @@ servers:
   - url: http://localhost:3000/api
     description: Desarrollo local
   - url: https://{dominio}/api
-    description: Producción (reemplazar por la URL del deploy)
+    description: Producción (Render)
     variables:
       dominio:
-        default: maply-backend.onrender.com
+        default: maply-backend-3sxm.onrender.com
 tags:
   - name: Autenticación
     description: Registro, login, logout, recuperación de contraseña y baja de cuenta

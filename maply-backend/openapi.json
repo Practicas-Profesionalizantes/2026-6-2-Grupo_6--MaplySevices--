@@ -16,10 +16,10 @@
     },
     {
       "url": "https://{dominio}/api",
-      "description": "Producción (reemplazar por la URL del deploy)",
+      "description": "Producción (Render)",
       "variables": {
         "dominio": {
-          "default": "maply-backend.onrender.com"
+          "default": "maply-backend-3sxm.onrender.com"
         }
       }
     }
