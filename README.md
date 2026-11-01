@@ -46,7 +46,7 @@ Aplicación móvil que permite a los usuarios consultar y reportar el estado en 
 1. Iniciar XAMPP y verificar que MySQL esté corriendo (puerto 3306).
 2. Abrir phpMyAdmin (`http://localhost/phpmyadmin`).
 3. Crear la base de datos `maply_services`.
-4. Importar `maply-backend/sql/maply_services.sql` (tablas principales).
+4. Importar `SQL - Maply Services.sql` (en la raíz del repo, tablas principales).
 5. Importar `maply-backend/sql/tokens_revocados.sql` (gestión de sesiones revocadas).
 
 ### 2. Backend
