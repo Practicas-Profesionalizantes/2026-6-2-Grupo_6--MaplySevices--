@@ -207,12 +207,24 @@ export type Lugar = {
   latitud: string | null;
   longitud: string | null;
   direccion: string | null;
+  // Solo viene cuando se pide la lista con la ubicación del usuario.
+  distancia_km?: number | null;
 };
 
-export function getLugares(categoria?: string, q?: string): Promise<Lugar[]> {
+// Con `ubicacion`, el backend ordena por cercanía (más cerca primero) y
+// agrega distancia_km a cada lugar. Sin ubicación, ordena por nombre.
+export function getLugares(
+  categoria?: string,
+  q?: string,
+  ubicacion?: { latitud: number; longitud: number } | null
+): Promise<Lugar[]> {
   const params = new URLSearchParams();
   if (categoria) params.set("categoria", categoria);
   if (q) params.set("q", q);
+  if (ubicacion) {
+    params.set("lat", String(ubicacion.latitud));
+    params.set("lng", String(ubicacion.longitud));
+  }
   const query = params.toString() ? `?${params.toString()}` : "";
   return request<Lugar[]>(`/lugares${query}`);
 }

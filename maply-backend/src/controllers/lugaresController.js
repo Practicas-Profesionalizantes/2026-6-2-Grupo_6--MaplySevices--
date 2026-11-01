@@ -24,13 +24,37 @@ async function getLugares(req, res) {
     // primera página de 100, así las pantallas que ya existen siguen igual.
     const limite = Math.min(Math.max(parseInt(req.query.limite, 10) || 100, 1), 100);
     const pagina = Math.max(parseInt(req.query.pagina, 10) || 1, 1);
+    // Cercanía (SCRUM-132 / SCRUM-427): con ?lat=..&lng=.. válidos se ordena
+    // por distancia al usuario (fórmula de Haversine, en km) y se agrega el
+    // campo distancia_km. Los lugares sin coordenadas quedan al final.
+    // Sin lat/lng se mantiene el orden por nombre de siempre.
+    const lat = Number.parseFloat(req.query.lat);
+    const lng = Number.parseFloat(req.query.lng);
+    const porCercania =
+      Number.isFinite(lat) && Number.isFinite(lng) &&
+      Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+
+    let columnas = 'id_lugar, nombre, categoria, latitud, longitud, direccion';
+    let orden = 'nombre ASC';
+    const paramsDistancia = [];
+    if (porCercania) {
+      columnas += `,
+        ROUND(6371 * 2 * ASIN(SQRT(
+          POWER(SIN(RADIANS(latitud - ?) / 2), 2) +
+          COS(RADIANS(?)) * COS(RADIANS(latitud)) *
+          POWER(SIN(RADIANS(longitud - ?) / 2), 2)
+        )), 2) AS distancia_km`;
+      paramsDistancia.push(lat, lat, lng);
+      orden = 'distancia_km IS NULL, distancia_km ASC, nombre ASC';
+    }
+
     const [filas] = await pool.query(
-      `SELECT id_lugar, nombre, categoria, latitud, longitud, direccion
+      `SELECT ${columnas}
        FROM lugar
        WHERE ${condiciones.join(' AND ')}
-       ORDER BY nombre ASC
+       ORDER BY ${orden}
        LIMIT ? OFFSET ?`,
-      [...params, limite, (pagina - 1) * limite]
+      [...paramsDistancia, ...params, limite, (pagina - 1) * limite]
     );
     res.set('X-Pagina', String(pagina));
     res.json(filas);

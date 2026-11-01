@@ -10,6 +10,7 @@ import { useColores } from '@/constants/Colors';
 import { getLugares, type Lugar } from '@/services/api';
 import { CATEGORIAS_LUGAR } from '@/constants/categoriasLugar';
 import { resolverSeleccionDeLugar } from '@/state/lugarSeleccionado';
+import { useUbicacionActual } from '@/hooks/use-ubicacion';
 
 // Debounce del buscador (SCRUM-257): sin esto, cada letra tipeada dispara
 // un request al backend (y, más adelante, a la Search Box de Mapbox si se
@@ -18,9 +19,19 @@ import { resolverSeleccionDeLugar } from '@/state/lugarSeleccionado';
 // no manda un request por letra.
 const DEBOUNCE_MS = 400;
 
+// 0,35 km → "350 m"; 2,4 km → "2,4 km" (con punto decimal en inglés).
+function formatearDistancia(km: number, idioma: string) {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  const valor = km < 10 ? km.toFixed(1) : String(Math.round(km));
+  return `${idioma.startsWith('es') ? valor.replace('.', ',') : valor} km`;
+}
+
 export default function SelectLugarScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const c = useColores();
+  // Ubicación del usuario (SCRUM-134): si da permiso, la lista se ordena
+  // por cercanía (SCRUM-132). Si lo niega, sigue ordenada por nombre.
+  const { ubicacion, cargando: buscandoUbicacion } = useUbicacionActual();
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [categoria, setCategoria] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
@@ -37,17 +48,20 @@ export default function SelectLugarScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      // Esperamos a saber si hay GPS para no pedir la lista dos veces
+      // (primero por nombre y después por cercanía).
+      if (buscandoUbicacion) return;
       let activo = true;
       setLoading(true);
       setError(false);
-      getLugares(categoria ?? undefined, busquedaDebounced || undefined)
+      getLugares(categoria ?? undefined, busquedaDebounced || undefined, ubicacion)
         .then((data) => activo && setLugares(data))
         .catch(() => activo && setError(true))
         .finally(() => activo && setLoading(false));
       return () => {
         activo = false;
       };
-    }, [categoria, busquedaDebounced, intento])
+    }, [categoria, busquedaDebounced, intento, buscandoUbicacion, ubicacion])
   );
 
   function onSeleccionar(lugar: Lugar) {
@@ -138,6 +152,11 @@ export default function SelectLugarScreen() {
                     {item.direccion || t(`selectLugar.categorias.${item.categoria}`, item.categoria)}
                   </Text>
                 </View>
+                {item.distancia_km != null && (
+                  <Text className="font-nunito8 text-[15px] text-secundario">
+                    {formatearDistancia(Number(item.distancia_km), i18n.language)}
+                  </Text>
+                )}
                 <Ionicons name="chevron-forward" size={20} color={c.secundario} />
               </Pressable>
             )}

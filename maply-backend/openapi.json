@@ -411,8 +411,30 @@
           "Lugares"
         ],
         "summary": "Listar lugares activos",
-        "description": "No requiere login. Ordenados por nombre y paginados.",
+        "description": "No requiere login. Paginados. Con lat y lng se ordenan por cercanía (más cerca primero) y se agrega distancia_km; sin ellos, por nombre.",
         "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Latitud del usuario (con lng, ordena por cercanía)",
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90,
+              "example": -34.5735
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "description": "Longitud del usuario (con lat, ordena por cercanía)",
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180,
+              "example": -58.487
+            }
+          },
           {
             "name": "categoria",
             "in": "query",
@@ -459,7 +481,22 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Lugar"
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/Lugar"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "distancia_km": {
+                            "type": "number",
+                            "nullable": true,
+                            "example": 1.25,
+                            "description": "Solo si se enviaron lat y lng"
+                          }
+                        }
+                      }
+                    ]
                   }
                 }
               }
