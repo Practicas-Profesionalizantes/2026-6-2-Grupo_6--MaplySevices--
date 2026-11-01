@@ -1,171 +1,164 @@
-# Maply Services 
+# Maply Services
 
-Aplicación móvil que permite a los usuarios consultar y reportar el estado en tiempo real de servicios y establecimientos cercanos (hospitales, bancos, transporte público, comercios, oficinas públicas, etc.), utilizando mapas interactivos y geolocalización.
+Aplicación móvil que permite consultar y reportar en tiempo real el estado de lugares y servicios cercanos (hospitales, bancos, transporte público, comercios, oficinas públicas, etc.): filas, demoras, cierres o poco movimiento, sobre un mapa interactivo con geolocalización.
+
+**En producción**
+- API: https://maply-backend-3sxm.onrender.com
+- Documentación de la API (Swagger): https://maply-backend-3sxm.onrender.com/api-docs
+
+> El servidor está en el plan gratuito de Render: si pasa 15 minutos sin uso se apaga y la primera respuesta puede tardar hasta un minuto.
 
 ---
 
-## Tecnologías utilizadas
+## Tecnologías
 
-###  Frontend — App Móvil
+### Frontend — app móvil (`maply-frontend/`)
 | Tecnología | Uso |
 |---|---|
-| React Native + Expo | Framework principal de la app móvil |
-| Expo Router | Navegación por pantallas (tipo file-system routing) |
+| React Native + Expo | App para Android, iOS y web con un mismo código |
+| Expo Router | Navegación por pantallas (basada en archivos) |
 | TypeScript | Tipado estático |
-| NativeWind | Estilos con sintaxis de Tailwind CSS para React Native |
-| @rnmapbox/maps | Mapas interactivos y geolocalización (Mapbox SDK) |
-| i18next + expo-localization | Soporte multilingüe (español / inglés) |
-| AsyncStorage | Almacenamiento persistente del token de sesión |
+| NativeWind | Estilos con sintaxis de Tailwind CSS |
+| @rnmapbox/maps | Mapa interactivo (Mapbox), detrás de la capa propia `MapaMaply` |
+| expo-location | Ubicación GPS del usuario |
+| i18next + expo-localization | Español e inglés |
+| expo-secure-store | Guarda el token de sesión cifrado |
 
-###  Backend — API REST
+### Backend — API REST (`maply-backend/`)
 | Tecnología | Uso |
 |---|---|
-| Node.js + Express | Servidor y enrutamiento |
-| MySQL (XAMPP) | Base de datos relacional |
-| jsonwebtoken (JWT) | Autenticación por tokens con expiración |
-| bcryptjs | Hash seguro de contraseñas |
-| express-validator | Validación y sanitización de entradas |
-| mysql2 | Conexión y pool de conexiones a MySQL |
+| Node.js + Express | Servidor y rutas |
+| MySQL | Base de datos relacional |
+| jsonwebtoken (JWT) | Autenticación con tokens de 1 día y lista de tokens revocados |
+| bcryptjs | Hash de contraseñas |
+| express-validator | Validación de datos de entrada |
+| helmet, cors, express-rate-limit | Cabeceras de seguridad, orígenes permitidos y límite de pedidos |
+| swagger-ui-express | Documentación interactiva en `/api-docs` |
+
+### Infraestructura
+| Servicio | Uso |
+|---|---|
+| Render | Hosting del backend (se despliega solo con cada push a `main`) |
+| Aiven | Base MySQL en la nube (conexión cifrada) |
+| GitHub Actions | Corre los tests del backend en cada push a `main` |
+| EAS Build (Expo) | Genera la APK de Android |
 
 ---
 
 ## Requisitos previos
 
-- **Node.js** v18 o superior — [descargar](https://nodejs.org/)
-- **XAMPP** con MySQL corriendo en el puerto 3306 — [descargar](https://www.apachefriends.org/)
-- **Expo CLI**: `npm install -g expo-cli`
-- **EAS CLI** (para compilar la app en dispositivo real): `npm install -g eas-cli`
-- Cuenta en **Mapbox** para obtener el access token — [mapbox.com](https://www.mapbox.com/)
+- **Node.js** 18 o superior
+- **XAMPP** con MySQL en el puerto 3306 (solo para desarrollo local)
+- **Android Studio** con un emulador, o un celular Android
+- **EAS CLI** para generar la APK: `npm install -g eas-cli`
+- Token público de **Mapbox** ([mapbox.com](https://www.mapbox.com/))
 
 ---
 
-## Configuración
+## Puesta en marcha local
 
 ### 1. Base de datos
-
-1. Iniciar XAMPP y verificar que MySQL esté corriendo (puerto 3306).
-2. Abrir phpMyAdmin (`http://localhost/phpmyadmin`).
-3. Crear la base de datos `maply_services`.
-4. Importar `SQL - Maply Services.sql` (en la raíz del repo, tablas principales).
-5. Importar `maply-backend/sql/tokens_revocados.sql` (gestión de sesiones revocadas).
+1. Iniciar XAMPP (Apache y MySQL).
+2. En phpMyAdmin (`http://localhost/phpmyadmin`), pestaña **Importar**, importar `SQL - Maply Services.sql` (raíz del repo). Crea la base `maply_services` con todas las tablas, roles, trigger de karma, índices y 27 lugares de prueba.
 
 ### 2. Backend
-
 ```bash
 cd maply-backend
 npm install
-cp .env.example .env
-# Editar .env con los datos reales (ver sección Variables de entorno)
-node src/server.js
+cp .env.example .env     # completar los valores (ver comentarios del archivo)
+npm run dev              # o: npm start
 ```
+Queda en `http://localhost:3000` y la documentación en `http://localhost:3000/api-docs`.
 
-El servidor queda disponible en `http://localhost:3000`.
+Tests: `npm test`
 
 ### 3. Frontend
-
 ```bash
 cd maply-frontend
 npm install
-cp .env.example .env
-# Editar .env con la URL de la API y el token de Mapbox
-npx expo start
+cp .env.example .env     # EXPO_PUBLIC_API_URL y EXPO_PUBLIC_MAPBOX_TOKEN
+npx expo run:android     # compila e instala la app en el emulador
 ```
+> Mapbox es un módulo nativo: la app **no funciona en Expo Go**. La primera vez hay que compilarla con `npx expo run:android`; después alcanza con `npx expo start --dev-client`.
 
->  **Importante:** La integración con Mapbox requiere un **development build** (no funciona con la app Expo Go estándar).
-> Para generar el build en Android: `eas build --profile development --platform android`
+Para usar el backend de producción en lugar del local:
+`EXPO_PUBLIC_API_URL=https://maply-backend-3sxm.onrender.com/api`
 
 ---
 
-## Variables de entorno
+## Deploy
 
-Cada subcarpeta tiene un archivo `.env.example` con los campos necesarios. Copiar a `.env` y completar con los valores reales.
-
-**El archivo `.env` nunca debe subirse al repositorio.** Ya está incluido en `.gitignore`.
+Ver **Manual de Deploy - Maply Services.docx**. Resumen:
+- **Base de datos (Aiven):** se importa con `maply-backend/scripts/importar-db.js`.
+- **Backend (Render):** Web Service con Root Directory `maply-backend`, `npm install` / `npm start` y las variables de `.env.example` (en producción, además `DB_PORT`, `DB_SSL_CA` y `TRUST_PROXY=1`).
+- **App:** `eas build -p android --profile preview` genera la APK.
 
 ---
 
-## Estructura del proyecto
+## Endpoints principales
+
+Todas las rutas van bajo `/api`. La lista completa (14 endpoints), con ejemplos, está en Swagger.
+
+| Método | Endpoint | Sesión | Descripción |
+|---|---|:---:|---|
+| POST | `/auth/register` | — | Crea una cuenta |
+| POST | `/auth/login` | — | Devuelve el token JWT |
+| POST | `/auth/logout` | ✅ | Revoca el token actual |
+| POST | `/auth/olvide-contrasena` | — | Envía un código para recuperar la contraseña |
+| GET | `/lugares?lat=&lng=&categoria=&q=` | — | Lugares por cercanía, categoría o nombre |
+| POST | `/lugares` | ✅ | Propone un lugar nuevo |
+| GET | `/reportes` | — | Últimos reportes |
+| POST | `/reportes` | ✅ | Publica un reporte (suma karma) |
+| GET | `/reportes/lugar/{id}/estado-actual` | — | Estado del lugar en la última hora |
+| GET | `/reportes/{id}/traduccion?idioma=` | — | Traduce un reporte (es ↔ en) |
+| POST | `/reportes/{id}/denuncias` | ✅ | Denuncia un reporte (3 denuncias lo ocultan) |
+| PATCH | `/admin/usuarios/{id}/bloqueo` | ✅ admin | Bloquea o desbloquea un usuario |
+
+Las rutas con ✅ requieren el header `Authorization: Bearer <token>`.
+
+---
+
+## Estructura del repositorio
 
 ```
-2026-6-2-Grupo_6--MaplySevices--/
-│
-├── maply-backend/                  # API REST (Node.js + Express)
+├── maply-backend/            API REST (Node.js + Express)
 │   ├── src/
-│   │   ├── config/
-│   │   │   └── db.js               # Pool de conexiones MySQL
-│   │   ├── controllers/
-│   │   │   ├── authController.js   # Registro, login, logout
-│   │   │   ├── lugaresController.js
-│   │   │   └── reportesController.js
-│   │   ├── middleware/
-│   │   │   └── auth.js             # Verificación JWT + blacklist
+│   │   ├── config/           Conexión a MySQL y envío de mails
+│   │   ├── controllers/      auth, lugares, reportes, admin
+│   │   ├── middleware/       Verificación de JWT y token revocado
 │   │   ├── routes/
-│   │   │   ├── authRoutes.js
-│   │   │   ├── lugaresRoutes.js
-│   │   │   └── reportesRoutes.js
 │   │   ├── validators/
-│   │   │   └── userRegistration.js
-│   │   └── server.js               # Punto de entrada del servidor
-│   ├── sql/
-│   │   ├── maply_services.sql
-│   │   └── tokens_revocados.sql
-│   └── .env.example
-│
-└── maply-frontend/                 # App móvil (React Native + Expo)
-    └── src/
-        ├── app/                    # Pantallas (Expo Router)
-        │   ├── _layout.tsx
-        │   ├── index.tsx           # Pantalla principal (mapa)
-        │   ├── login.tsx
-        │   ├── register.tsx
-        │   ├── create-report.tsx
-        │   ├── report-details.tsx
-        │   └── select-lugar.tsx
-        ├── components/
-        │   ├── Header.tsx
-        │   ├── MapaMaply.tsx       # Capa de abstracción del mapa
-        │   └── ReportCard.tsx
-        ├── constants/
-        │   ├── Colors.ts           # Paleta de colores Maply
-        │   ├── categoriasLugar.ts
-        │   └── categoriasReporte.ts
-        ├── locales/
-        │   ├── es.json             # Traducciones en español
-        │   └── en.json             # Traducciones en inglés
-        ├── services/
-        │   └── api.ts              # Todas las llamadas HTTP a la API
-        └── state/
-            └── lugarSeleccionado.ts
+│   │   └── server.js
+│   ├── sql/                  Scripts incrementales (karma, denuncias, índices...)
+│   ├── scripts/              importar-db.js, reset-password.js
+│   ├── test/                 Tests unitarios (node --test)
+│   └── openapi.json          Especificación de la API (Swagger)
+├── maply-frontend/           App (React Native + Expo)
+│   └── src/
+│       ├── app/              Pantallas (Expo Router)
+│       ├── components/       MapaMaply, ReportCard, UI
+│       ├── constants/        Colores, categorías, i18n
+│       ├── hooks/            Ubicación, tema
+│       ├── locales/          es.json, en.json
+│       └── services/api.ts   Llamadas a la API
+├── .github/workflows/ci.yml  Integración continua
+├── old/                      Archivos de versiones anteriores
+└── *.docx, *.pdf, *.drawio   Documentación y diagramas del proyecto
 ```
-
----
-
-## Endpoints de la API
-
-| Método | Endpoint | Autenticación | Descripción |
-|--------|----------|:---:|-------------|
-| POST | `/api/auth/register` | ❌ | Registra un nuevo usuario. Recibe `nombre`, `email` y `password`. Hashea la contraseña con BCrypt y devuelve confirmación. |
-| POST | `/api/auth/login` | ❌ | Inicia sesión. Recibe `email` y `password`, valida el hash y devuelve un token JWT con 7 días de expiración. |
-| POST | `/api/auth/logout` | ✅ | Cierra la sesión del usuario. Invalida el token JWT agregándolo a la blacklist (`tokens_revocados`). |
-| GET | `/api/lugares` | ✅ | Devuelve la lista de establecimientos. Acepta el parámetro opcional `?categoria=` para filtrar por tipo de lugar. |
-| POST | `/api/reportes` | ✅ | Crea un reporte sobre un establecimiento. Recibe `id_lugar`, `categoria_reporte` y `descripcion`. |
-
-Los endpoints con ✅ requieren el header: `Authorization: Bearer <token>`
 
 ---
 
 ## Equipo
 
-**Grupo 6 — 6° Año 2° División — Prácticas Profesionalizantes 2026**
+**Grupo 6 — 6° 2° — Prácticas Profesionalizantes 2026**
+Escuela Técnica N°32 D.E. 14 "Gral. José de San Martín"
 
-| Nombre | Rol |
-|---|---|
-| Felipe Kuo Lee | Desarrollo |
-| Brunella Figallo | Desarrollo |
-| Lucca Martinez | Team |
+| Integrante |
+|---|
+| Brunella Figallo |
+| Felipe Kuo Lee |
+| Lucca Martinez |
 
----
+Participaron en la primera etapa: Juan Pablo Llanos y Valentina Palacios.
 
-## Licencia
-
-Proyecto académico — Escuela Técnica 32 "General José de San Martín" — 2026
+Docentes: Prof. Damián Olaso y Prof. Gonzalo Consorti.
