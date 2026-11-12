@@ -10,7 +10,8 @@
     "myLocation": "Mi ubicación",
     "errorTitle": "No pudimos cargar los reportes",
     "emptyTitle": "Todavía no hay reportes",
-    "sessionLabel": "Sesión de {{nombre}}. Tocá para cerrar sesión"
+    "sessionLabel": "Sesión de {{nombre}}. Tocá para cerrar sesión",
+    "goToReports": "Ver reportes en el mapa"
   },
   "createReport": {
     "title": "Nuevo reporte",
@@ -143,7 +144,8 @@
   "legal": {
     "accept": "Tengo 13 años o más y acepto los",
     "linkText": "Términos y Política de privacidad",
-    "mustAccept": "Tenés que aceptar los términos y la política de privacidad."
+    "mustAccept": "Tenés que aceptar los términos y la política de privacidad.",
+    "mustAcceptShort": "Marcá esta casilla para continuar."
   },
   "placeholders": {
     "email": "vos@ejemplo.com",
@@ -204,6 +206,8 @@
     "reportHere": "Reportar acá",
     "voteUp": "Sirve. Votos: {{count}}",
     "voteDown": "No coincide. Votos: {{count}}",
-    "notificationsUnread": "Notificaciones sin leer: {{count}}"
+    "notificationsUnread": "Notificaciones sin leer: {{count}}",
+    "voteError": "No se pudo registrar el voto",
+    "favoriteError": "No se pudo guardar el favorito"
   }
 }

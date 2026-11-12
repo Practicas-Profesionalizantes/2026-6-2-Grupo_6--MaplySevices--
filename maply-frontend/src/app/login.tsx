@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, Text, View, KeyboardAvoidingView } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Boton, Campo, Encabezado } from '@/components/ui';
+import { Aviso, Boton, Campo, Encabezado } from '@/components/ui';
 import { login } from '@/services/api';
 
 export default function LoginScreen() {
@@ -12,15 +12,17 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit() {
     if (!email.trim() || !contrasena) return;
     setEnviando(true);
+    setError(null);
     try {
       await login({ email: email.trim(), contrasena });
       router.replace('/');
     } catch (e: any) {
-      Alert.alert(t('auth.loginErrorTitle'), e.message);
+      setError(e.message);
     } finally {
       setEnviando(false);
     }
@@ -61,6 +63,7 @@ export default function LoginScreen() {
       </ScrollView>
 
       <View className="px-5 pb-2 pt-2">
+        {error ? <Aviso titulo={t('auth.loginErrorTitle')} mensaje={error} /> : null}
         <Boton titulo={t('auth.loginSubmit')} cargando={enviando} onPress={onSubmit} />
         <Pressable onPress={() => router.replace('/register')} accessibilityRole="link" className="min-h-12 items-center justify-center">
           <Text className="font-nunito8 text-base text-secundario">

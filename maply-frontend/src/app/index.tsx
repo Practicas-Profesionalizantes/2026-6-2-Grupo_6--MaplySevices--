@@ -117,6 +117,14 @@ function HomeScreen() {
   // Acompaña a la hoja al bajar, pero no sube más del 40 %: arriba la hoja lo tapa.
   const estiloUbicacion = useAnimatedStyle(() => ({ bottom: Math.min(altura.value, minimo) + 16 }));
 
+  // Centro de todos los pines (promedio de coordenadas).
+  function irAReportes() {
+    if (!pines.length) return;
+    const lat = pines.reduce((suma, p) => suma + p.latitud, 0) / pines.length;
+    const lng = pines.reduce((suma, p) => suma + p.longitud, 0) / pines.length;
+    mapaRef.current?.centrarEn(lat, lng);
+  }
+
   function onNuevoReportePress() {
     router.push(usuario ? '/create-report' : '/login');
   }
@@ -205,6 +213,22 @@ function HomeScreen() {
           </Tocable>
         </View>
       </View>
+
+      {/* Lleva el mapa a donde están los reportes (hoy, Villa Urquiza), aunque la
+          persona esté en otro barrio: el GPS centra el mapa en su ubicación. */}
+      {pines.length > 0 ? (
+        <View className="absolute left-4" style={{ top: insets.top + 68 }}>
+          <Tocable
+            onPress={irAReportes}
+            accessibilityLabel={t('home.goToReports')}
+            className="min-h-11 flex-row items-center gap-1.5 rounded-full border border-borde bg-superficie px-4"
+            style={sombraSuave}
+          >
+            <Ionicons name="location" size={18} color={c.boton} />
+            <Text className="font-nunito8 text-[15px] text-texto">{t('home.goToReports')}</Text>
+          </Tocable>
+        </View>
+      ) : null}
 
       <Animated.View style={[{ position: 'absolute', right: 16 }, estiloUbicacion]}>
         <BotonRedondo

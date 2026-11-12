@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, KeyboardAvoidingView } from 'react-native';
+import { Pressable, ScrollView, Text, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { Boton, Campo, Encabezado } from '@/components/ui';
+import { Aviso, Boton, Campo, Encabezado } from '@/components/ui';
 import { olvideContrasena, restablecerContrasena } from '@/services/api';
 
 // Dos pasos en la misma pantalla: 1) pedir el código por mail, 2) canjearlo
@@ -16,15 +16,17 @@ export default function OlvideContrasenaScreen() {
   const [contrasena, setContrasena] = useState('');
   const [codigoEnviado, setCodigoEnviado] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [aviso, setAviso] = useState<{ tipo: 'ok' | 'error'; mensaje: string } | null>(null);
 
   async function enviar(accion: () => Promise<{ mensaje: string }>, alTerminar: () => void) {
     setEnviando(true);
+    setAviso(null);
     try {
       const { mensaje } = await accion();
-      Alert.alert(mensaje);
+      setAviso({ tipo: 'ok', mensaje });
       alTerminar();
     } catch (e: any) {
-      Alert.alert(t('auth.forgotErrorTitle'), e.message);
+      setAviso({ tipo: 'error', mensaje: e.message });
     } finally {
       setEnviando(false);
     }
@@ -59,6 +61,8 @@ export default function OlvideContrasenaScreen() {
           keyboardType="email-address"
           placeholder={t('placeholders.email')}
         />
+
+        {aviso ? <Aviso tipo={aviso.tipo} titulo={aviso.tipo === 'error' ? t('auth.forgotErrorTitle') : undefined} mensaje={aviso.mensaje} /> : null}
 
         {codigoEnviado ? (
           <>

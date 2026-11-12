@@ -10,7 +10,8 @@
     "myLocation": "My location",
     "errorTitle": "We couldn't load the reports",
     "emptyTitle": "No reports yet",
-    "sessionLabel": "{{nombre}}'s session. Tap to log out"
+    "sessionLabel": "{{nombre}}'s session. Tap to log out",
+    "goToReports": "Show reports on the map"
   },
   "createReport": {
     "title": "New report",
@@ -143,7 +144,8 @@
   "legal": {
     "accept": "I'm 13 or older and I accept the",
     "linkText": "Terms and Privacy Policy",
-    "mustAccept": "You must accept the terms and privacy policy."
+    "mustAccept": "You must accept the terms and privacy policy.",
+    "mustAcceptShort": "Check this box to continue."
   },
   "placeholders": {
     "email": "you@example.com",
@@ -204,6 +206,8 @@
     "reportHere": "Report here",
     "voteUp": "Helpful. Votes: {{count}}",
     "voteDown": "Doesn't match. Votes: {{count}}",
-    "notificationsUnread": "Unread notifications: {{count}}"
+    "notificationsUnread": "Unread notifications: {{count}}",
+    "voteError": "The vote could not be saved",
+    "favoriteError": "The favorite could not be saved"
   }
 }

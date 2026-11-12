@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View, KeyboardAvoidingView } from 'react-native';
+import { Pressable, ScrollView, Text, View, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Boton, Campo, Encabezado } from '@/components/ui';
+import { Aviso, Boton, Campo, Encabezado } from '@/components/ui';
 import { useColores } from '@/constants/Colors';
 import { login, register } from '@/services/api';
 
@@ -18,17 +18,21 @@ export default function RegisterScreen() {
   const [telefono, setTelefono] = useState('');
   const [acepta, setAcepta] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Se marca en rojo la casilla de términos solo después de intentar registrarse.
+  const [faltaAceptar, setFaltaAceptar] = useState(false);
 
   const letrasYNumeros = /[A-Za-z]/.test(contrasena) && /\d/.test(contrasena);
   const largoOk = contrasena.length >= 8;
 
   async function onSubmit() {
+    setError(null);
     if (!nombre.trim() || !email.trim() || !largoOk || !letrasYNumeros) {
-      Alert.alert(t('auth.registerErrorTitle'), t('auth.registerValidation'));
+      setError(t('auth.registerValidation'));
       return;
     }
     if (!acepta) {
-      Alert.alert(t('auth.registerErrorTitle'), t('legal.mustAccept'));
+      setFaltaAceptar(true);
       return;
     }
     setEnviando(true);
@@ -45,7 +49,7 @@ export default function RegisterScreen() {
       await login({ email: email.trim(), contrasena });
       router.replace('/');
     } catch (e: any) {
-      Alert.alert(t('auth.registerErrorTitle'), e.message);
+      setError(e.message);
     } finally {
       setEnviando(false);
     }
@@ -103,13 +107,16 @@ export default function RegisterScreen() {
         />
 
         <Pressable
-          onPress={() => setAcepta(!acepta)}
+          onPress={() => {
+            setAcepta(!acepta);
+            setFaltaAceptar(false);
+          }}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: acepta }}
           className="mt-1 min-h-11 flex-row items-center gap-3"
         >
           <View
-            className={`h-7 w-7 items-center justify-center rounded-lg border-2 ${acepta ? 'border-boton bg-boton' : 'border-secundario bg-superficie'}`}
+            className={`h-7 w-7 items-center justify-center rounded-lg border-2 ${acepta ? 'border-boton bg-boton' : faltaAceptar ? 'border-peligro bg-superficie' : 'border-secundario bg-superficie'}`}
           >
             {acepta ? <Ionicons name="checkmark" size={18} color="#FFFFFF" /> : null}
           </View>
@@ -120,9 +127,16 @@ export default function RegisterScreen() {
             </Link>
           </Text>
         </Pressable>
+        {faltaAceptar ? (
+          <View className="ml-10 mt-1 flex-row items-center gap-1.5" accessibilityLiveRegion="polite">
+            <Ionicons name="alert-circle" size={16} color={c.peligro} />
+            <Text className="flex-1 font-nunito8 text-sm text-peligro">{t('legal.mustAcceptShort')}</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       <View className="px-5 pb-2 pt-2">
+        {error ? <Aviso titulo={t('auth.registerErrorTitle')} mensaje={error} /> : null}
         <Boton titulo={t('auth.registerSubmit')} cargando={enviando} onPress={onSubmit} />
         <Pressable onPress={() => router.replace('/login')} accessibilityRole="link" className="min-h-12 items-center justify-center">
           <Text className="font-nunito8 text-base text-secundario">

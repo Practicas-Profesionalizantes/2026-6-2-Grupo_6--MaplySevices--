@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { MapaMaply } from '@/components/MapaMaply';
 import { textoDelReporte } from '@/components/ReportCard';
-import { BotonRedondo, Boton, EstadoVacio, HojaInferior, ICONOS_ESTADO, OpcionHoja, Tocable, haceCuanto, volver, type IconName } from '@/components/ui';
+import { Aviso, BotonRedondo, Boton, EstadoVacio, HojaInferior, ICONOS_ESTADO, OpcionHoja, Tocable, haceCuanto, volver, type IconName } from '@/components/ui';
 import { colorEstado, textoEstado, useColores } from '@/constants/Colors';
 import {
   cambiarFavorito,
@@ -69,6 +69,7 @@ export default function ReportDetailsScreen() {
   const [errorComentario, setErrorComentario] = useState<string | null>(null);
   const [comentarioABorrar, setComentarioABorrar] = useState<Comentario | null>(null);
   const [votando, setVotando] = useState(false);
+  const [errorComunidad, setErrorComunidad] = useState<string | null>(null);
 
   useEffect(() => {
     getUsuarioActual().then(setUsuario);
@@ -91,10 +92,12 @@ export default function ReportDetailsScreen() {
     if (!reporte) return;
     const nuevo = !esFavorito;
     setEsFavorito(nuevo); // se ve al instante; si falla, vuelve atrás
+    setErrorComunidad(null);
     try {
       await cambiarFavorito(reporte.id_lugar, nuevo);
-    } catch {
+    } catch (e: any) {
       setEsFavorito(!nuevo);
+      setErrorComunidad(e.message || t('community.favoriteError'));
     }
   }
 
@@ -103,11 +106,12 @@ export default function ReportDetailsScreen() {
     if (!usuario) return router.push('/login');
     if (!reporte || votando) return;
     setVotando(true);
+    setErrorComunidad(null);
     try {
       const votos = await votarReporte(id!, reporte.mi_voto === valor ? 0 : valor);
       setReporte({ ...reporte, ...votos });
     } catch (e: any) {
-      Alert.alert(e.message);
+      setErrorComunidad(e.message || t('community.voteError'));
     } finally {
       setVotando(false);
     }
@@ -141,7 +145,7 @@ export default function ReportDetailsScreen() {
     setComentarioABorrar(null);
     eliminarComentario(id!, comentario.id_comentario)
       .then(() => setComentarios((lista) => lista.filter((c) => c.id_comentario !== comentario.id_comentario)))
-      .catch((e) => Alert.alert(e.message));
+      .catch((e) => setErrorComunidad(e.message));
   }
 
   // "Ver traducción": al idioma actual de la app. Si cambia el idioma se
@@ -363,6 +367,12 @@ export default function ReportDetailsScreen() {
                 onPress={() => onVotar(-1)}
               />
             </View>
+
+            {errorComunidad ? (
+              <View className="mt-3">
+                <Aviso mensaje={errorComunidad} />
+              </View>
+            ) : null}
 
             {/* Comentarios: para actualizar o completar el reporte. */}
             <Text className="mb-2 mt-7 font-nunito9 text-lg text-texto">

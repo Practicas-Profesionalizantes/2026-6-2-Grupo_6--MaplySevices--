@@ -326,3 +326,24 @@ export function OpcionHoja({
     </Tocable>
   );
 }
+
+// Aviso dentro de la pantalla (error, o confirmación en verde). Reemplaza a
+// Alert.alert, que en Android se ve con el diálogo gris del sistema.
+export function Aviso({ titulo, mensaje, tipo = 'error' }: { titulo?: string; mensaje: string; tipo?: 'error' | 'ok' }) {
+  const c = useColores();
+  const color = tipo === 'ok' ? '#16A34A' : c.peligro;
+  return (
+    <View
+      accessibilityLiveRegion="polite"
+      accessibilityRole="alert"
+      className="mb-3 flex-row items-start gap-3 rounded-[18px] px-4 py-3"
+      style={{ backgroundColor: color + (c.oscuro ? '26' : '14'), borderWidth: 1, borderColor: color + '55' }}
+    >
+      <Ionicons name={tipo === 'ok' ? 'checkmark-circle' : 'alert-circle'} size={22} color={color} style={{ marginTop: 1 }} />
+      <View className="flex-1">
+        {titulo ? <Text className="font-nunito8 text-[15px] text-texto">{titulo}</Text> : null}
+        <Text className="font-nunito text-[15px] leading-5 text-texto">{mensaje}</Text>
+      </View>
+    </View>
+  );
+}

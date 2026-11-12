@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View, Alert, KeyboardAvoidingView } from 'react-native';
+import { Pressable, ScrollView, Text, View, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Boton, Campo, Encabezado, Tocable } from '@/components/ui';
+import { Aviso, Boton, Campo, Encabezado, Tocable } from '@/components/ui';
 import { colorEstado, fondoEstado, textoEstado, useColores } from '@/constants/Colors';
 import { crearReporte, getUsuarioActual, type Lugar } from '@/services/api';
 import { CATEGORIAS_REPORTE, type CategoriaReporte } from '@/constants/categoriasReporte';
@@ -24,6 +24,7 @@ export default function CreateReportScreen() {
       : null
   );
   const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Guarda extra: si alguien entra a esta pantalla directamente sin
@@ -41,8 +42,9 @@ export default function CreateReportScreen() {
   }
 
   async function onSubmit() {
+    setError(null);
     if (!lugar) {
-      Alert.alert(t('createReport.errorTitle'), t('createReport.lugarRequerido'));
+      setError(t('createReport.lugarRequerido'));
       return;
     }
     setEnviando(true);
@@ -54,7 +56,7 @@ export default function CreateReportScreen() {
       await crearReporte({ id_lugar: lugar.id_lugar, contenido: contenidoFinal, categoria_reporte: categoria });
       router.back();
     } catch (e: any) {
-      Alert.alert(t('createReport.errorTitle'), e.message);
+      setError(e.message);
     } finally {
       setEnviando(false);
     }
@@ -131,6 +133,7 @@ export default function CreateReportScreen() {
       </ScrollView>
 
       <View className="px-5 pb-4 pt-2">
+        {error ? <Aviso titulo={t('createReport.errorTitle')} mensaje={error} /> : null}
         <Boton titulo={t('createReport.submit')} cargando={enviando} onPress={onSubmit} />
       </View>
       </KeyboardAvoidingView>
