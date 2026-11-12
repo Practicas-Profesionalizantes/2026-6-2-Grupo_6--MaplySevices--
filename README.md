@@ -59,7 +59,7 @@ Aplicación móvil que permite consultar y reportar en tiempo real el estado de 
 
 ### 1. Base de datos
 1. Iniciar XAMPP (Apache y MySQL).
-2. En phpMyAdmin (`http://localhost/phpmyadmin`), pestaña **Importar**, importar `SQL - Maply Services.sql` (raíz del repo). Crea la base `maply_services` con todas las tablas, roles, trigger de karma, índices y 27 lugares de prueba.
+2. En phpMyAdmin (`http://localhost/phpmyadmin`), pestaña **Importar**, importar `SQL - Maply Services.sql` (raíz del repo). Crea la base `maply_services` con todas las tablas, roles, trigger de karma, índices y 27 lugares de prueba. Después importar también `maply-backend/sql/comunidad.sql` (votos, comentarios y notificaciones de favoritos).
 
 ### 2. Backend
 ```bash
@@ -97,7 +97,7 @@ Ver **Manual de Deploy - Maply Services.docx**. Resumen:
 
 ## Endpoints principales
 
-Todas las rutas van bajo `/api`. La lista completa (16 endpoints), con ejemplos, está en Swagger.
+Todas las rutas van bajo `/api`. La lista completa (25 endpoints), con ejemplos, está en Swagger.
 
 | Método | Endpoint | Sesión | Descripción |
 |---|---|:---:|---|
@@ -113,6 +113,10 @@ Todas las rutas van bajo `/api`. La lista completa (16 endpoints), con ejemplos,
 | GET | `/reportes/{id}/traduccion?idioma=` | — | Traduce un reporte (es ↔ en) |
 | DELETE | `/reportes/{id}` | ✅ | Elimina un reporte propio (el admin, cualquiera) |
 | POST | `/reportes/{id}/denuncias` | ✅ | Denuncia un reporte (3 denuncias lo ocultan) |
+| PUT | `/reportes/{id}/voto` | ✅ | Vota un reporte: 1 sirve, -1 no coincide, 0 saca el voto |
+| GET / POST | `/reportes/{id}/comentarios` | POST ✅ | Lee o publica comentarios de un reporte |
+| GET | `/favoritos` · PUT / DELETE `/favoritos/{id_lugar}` | ✅ | Lugares guardados |
+| GET | `/notificaciones` · PATCH `/notificaciones/leidas` | ✅ | Avisos de reportes nuevos en tus favoritos |
 | PATCH | `/admin/usuarios/{id}/bloqueo` | ✅ admin | Bloquea o desbloquea un usuario |
 
 Las rutas con ✅ requieren el header `Authorization: Bearer <token>`.

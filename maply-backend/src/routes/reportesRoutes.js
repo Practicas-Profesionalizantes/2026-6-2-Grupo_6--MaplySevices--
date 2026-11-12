@@ -6,10 +6,13 @@ const router = express.Router();
 const porUsuario = (req) => String(req.usuario.id_usuario);
 const limitePublicar = rateLimit({ windowMs: 60 * 60 * 1000, limit: 30, keyGenerator: porUsuario, message: { error: 'Publicaste demasiado seguido. Probá más tarde.' } });
 const limiteDenunciar = rateLimit({ windowMs: 60 * 60 * 1000, limit: 20, keyGenerator: porUsuario, message: { error: 'Denunciaste demasiado seguido. Probá más tarde.' } });
+const limiteComentar = rateLimit({ windowMs: 60 * 60 * 1000, limit: 30, keyGenerator: porUsuario, message: { error: 'Comentaste demasiado seguido. Probá más tarde.' } });
+const limiteVotar = rateLimit({ windowMs: 60 * 60 * 1000, limit: 120, keyGenerator: porUsuario, message: { error: 'Votaste demasiado seguido. Probá más tarde.' } });
 const reportesController = require('../controllers/reportesController');
+const comunidad = require('../controllers/comunidadController');
 const { query } = require('express-validator');
 const { verifyToken, usuarioOpcional } = require('../middleware/auth');
-const { reporteRules, denunciaRules, idParam, validar } = require('../validators/userRegistration');
+const { reporteRules, denunciaRules, comentarioRules, votoRules, idParam, validar } = require('../validators/userRegistration');
 
 router.get('/', reportesController.getReportes);
 // Ruta específica antes que "/:id" para que "/lugar/5/estado-actual" no
@@ -22,5 +25,11 @@ router.get('/:id/traduccion', limiteTraducir, idParam('id'), query('idioma').isI
 router.post('/', verifyToken, limitePublicar, reporteRules, validar, reportesController.crearReporte);
 router.delete('/:id', verifyToken, idParam('id'), validar, reportesController.eliminarReporte);
 router.post('/:id/denuncias', verifyToken, limiteDenunciar, idParam('id'), denunciaRules, validar, reportesController.denunciarReporte);
+
+// Votos y comentarios (Términos, punto 3).
+router.put('/:id/voto', verifyToken, limiteVotar, idParam('id'), votoRules, validar, comunidad.votarReporte);
+router.get('/:id/comentarios', usuarioOpcional, idParam('id'), validar, comunidad.getComentarios);
+router.post('/:id/comentarios', verifyToken, limiteComentar, idParam('id'), comentarioRules, validar, comunidad.crearComentario);
+router.delete('/:id/comentarios/:id_comentario', verifyToken, idParam('id'), idParam('id_comentario'), validar, comunidad.eliminarComentario);
 
 module.exports = router;

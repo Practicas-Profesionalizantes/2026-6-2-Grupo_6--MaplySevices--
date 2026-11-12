@@ -80,6 +80,11 @@ export type Reporte = {
   // Solo en el detalle: si es de quien mira y si lo puede eliminar (autor o admin).
   es_propio?: boolean;
   puede_eliminar?: boolean;
+  // Votos y comentarios (vienen en la lista y en el detalle). mi_voto solo en el detalle.
+  votos_positivos?: number;
+  votos_negativos?: number;
+  total_comentarios?: number;
+  mi_voto?: -1 | 0 | 1;
 };
 
 export type EstadoActualLugar = {
@@ -248,4 +253,59 @@ export function crearLugar(data: {
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+// --- Comunidad: votos, comentarios, favoritos y notificaciones ----------
+
+export type Votos = { votos_positivos: number; votos_negativos: number; mi_voto: -1 | 0 | 1 };
+
+// 1 = sirve, -1 = no coincide, 0 = sacar el voto.
+export function votarReporte(id: string | number, valor: -1 | 0 | 1): Promise<Votos> {
+  return request(`/reportes/${id}/voto`, { method: "PUT", body: JSON.stringify({ valor }) });
+}
+
+export type Comentario = {
+  id_comentario: number;
+  contenido: string;
+  fecha: string;
+  es_propio: boolean;
+  puede_eliminar: boolean;
+};
+
+export function getComentarios(id: string | number): Promise<Comentario[]> {
+  return request(`/reportes/${id}/comentarios`);
+}
+
+export function crearComentario(id: string | number, contenido: string): Promise<Comentario> {
+  return request(`/reportes/${id}/comentarios`, { method: "POST", body: JSON.stringify({ contenido }) });
+}
+
+export function eliminarComentario(id: string | number, idComentario: number): Promise<{ mensaje: string }> {
+  return request(`/reportes/${id}/comentarios/${idComentario}`, { method: "DELETE" });
+}
+
+export function getFavoritos(): Promise<Lugar[]> {
+  return request("/favoritos");
+}
+
+export function cambiarFavorito(idLugar: number, guardar: boolean): Promise<{ id_lugar: number; favorito: boolean }> {
+  return request(`/favoritos/${idLugar}`, { method: guardar ? "PUT" : "DELETE" });
+}
+
+export type Notificacion = {
+  id_notificacion: number;
+  id_reporte: number | null;
+  tipo: string;
+  leida: boolean;
+  fecha_notificacion: string;
+  lugar_nombre: string | null;
+  categoria_reporte: string | null;
+};
+
+export function getNotificaciones(): Promise<Notificacion[]> {
+  return request("/notificaciones");
+}
+
+export function marcarNotificacionesLeidas(): Promise<{ mensaje: string }> {
+  return request("/notificaciones/leidas", { method: "PATCH" });
 }

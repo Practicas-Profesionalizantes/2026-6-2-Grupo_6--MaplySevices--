@@ -17,6 +17,7 @@ const authRoutes = require('./routes/authRoutes');
 const reportesRoutes = require('./routes/reportesRoutes');
 const lugaresRoutes = require('./routes/lugaresRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const cuentaRoutes = require('./routes/cuentaRoutes');
 const swaggerUi = require('swagger-ui-express');
 
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/reportes', reportesRoutes);
 app.use('/api/lugares', lugaresRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', cuentaRoutes); // /api/favoritos y /api/notificaciones
 
 app.use((req, res) => res.status(404).json({ error: 'No encontrado' }));
 // Nunca devolver stack traces ni errores de la base al cliente.

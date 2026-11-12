@@ -50,6 +50,10 @@ const lugarRules = [
 
 const denunciaRules = [body('motivo').isString().trim().isLength({ min: 3, max: 255 })];
 
+const comentarioRules = [body('contenido').isString().trim().isLength({ min: 1, max: 280 }).withMessage('El comentario tiene que tener entre 1 y 280 caracteres')];
+// 1 = sirve, -1 = no coincide, 0 = sacar el voto.
+const votoRules = [body('valor').isInt({ min: -1, max: 1 }).toInt()];
+
 const idParam = (nombre) => param(nombre).isInt({ min: 1 }).toInt();
 
 function validateUserRegistration(req, res, next) {
@@ -72,5 +76,7 @@ module.exports = {
   reporteRules,
   lugarRules,
   denunciaRules,
+  comentarioRules,
+  votoRules,
   idParam,
 };

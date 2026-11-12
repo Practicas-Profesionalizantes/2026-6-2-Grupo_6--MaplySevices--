@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View, Alert, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,7 +16,13 @@ export default function CreateReportScreen() {
   const c = useColores();
   const [categoria, setCategoria] = useState<CategoriaReporte>('otro');
   const [contenido, setContenido] = useState('');
-  const [lugar, setLugar] = useState<Lugar | null>(null);
+  // Desde "Mis favoritos" se llega con el lugar ya elegido.
+  const params = useLocalSearchParams<{ id_lugar?: string; nombre?: string; categoria?: string }>();
+  const [lugar, setLugar] = useState<Lugar | null>(
+    params.id_lugar
+      ? { id_lugar: Number(params.id_lugar), nombre: params.nombre ?? '', categoria: params.categoria ?? 'otro', latitud: null, longitud: null, direccion: null }
+      : null
+  );
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {

@@ -147,7 +147,17 @@ export default function ConfiguracionScreen() {
           })}
         </View>
 
-        <Pressable onPress={() => router.push('/legal')} accessibilityRole="link" className="mt-6">
+        {usuario ? (
+          <Pressable onPress={() => router.push('/favoritos')} accessibilityRole="link" className="mt-6">
+            <View className="flex-row items-center gap-3 rounded-[20px] border border-borde bg-tarjeta px-5" style={{ minHeight: 64 }}>
+              <Ionicons name="star-outline" size={22} color={c.boton} />
+              <Text className="flex-1 font-nunito8 text-[17px] text-texto">{t('community.myFavorites')}</Text>
+              <Ionicons name="chevron-forward" size={20} color={c.secundario} />
+            </View>
+          </Pressable>
+        ) : null}
+
+        <Pressable onPress={() => router.push('/legal')} accessibilityRole="link" className={usuario ? 'mt-2.5' : 'mt-6'}>
           <View className="flex-row items-center gap-3 rounded-[20px] border border-borde bg-tarjeta px-5" style={{ minHeight: 64 }}>
             <Ionicons name="shield-outline" size={22} color={c.boton} />
             <Text className="flex-1 font-nunito8 text-[17px] text-texto">{t('config.privacy')}</Text>

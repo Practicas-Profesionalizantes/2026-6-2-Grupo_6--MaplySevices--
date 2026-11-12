@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, Text, View, ActivityIndicator } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -7,9 +7,26 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { MapaMaply } from '@/components/MapaMaply';
 import { textoDelReporte } from '@/components/ReportCard';
-import { BotonRedondo, Boton, EstadoVacio, HojaInferior, ICONOS_ESTADO, OpcionHoja, haceCuanto, volver } from '@/components/ui';
+import { BotonRedondo, Boton, EstadoVacio, HojaInferior, ICONOS_ESTADO, OpcionHoja, Tocable, haceCuanto, volver, type IconName } from '@/components/ui';
 import { colorEstado, textoEstado, useColores } from '@/constants/Colors';
-import { denunciarReporte, eliminarReporte, getReporteDetalle, getUsuarioActual, getEstadoActualLugar, traducirReporte, type Reporte, type EstadoActualLugar } from '@/services/api';
+import {
+  cambiarFavorito,
+  crearComentario,
+  denunciarReporte,
+  eliminarComentario,
+  eliminarReporte,
+  getComentarios,
+  getEstadoActualLugar,
+  getFavoritos,
+  getReporteDetalle,
+  getUsuarioActual,
+  traducirReporte,
+  votarReporte,
+  type Comentario,
+  type EstadoActualLugar,
+  type Reporte,
+  type Usuario,
+} from '@/services/api';
 
 export default function ReportDetailsScreen() {
   const { t, i18n } = useTranslation();
@@ -42,6 +59,90 @@ export default function ReportDetailsScreen() {
       .then(setEstadoActual)
       .catch(() => setEstadoActual(null));
   }, [reporte?.id_lugar]);
+
+  // --- Comunidad: favorito, votos y comentarios (Términos, punto 3) ---
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [esFavorito, setEsFavorito] = useState(false);
+  const [comentarios, setComentarios] = useState<Comentario[]>([]);
+  const [nuevoComentario, setNuevoComentario] = useState('');
+  const [comentando, setComentando] = useState(false);
+  const [errorComentario, setErrorComentario] = useState<string | null>(null);
+  const [comentarioABorrar, setComentarioABorrar] = useState<Comentario | null>(null);
+  const [votando, setVotando] = useState(false);
+
+  useEffect(() => {
+    getUsuarioActual().then(setUsuario);
+  }, []);
+
+  useEffect(() => {
+    if (!id) return;
+    getComentarios(id).then(setComentarios).catch(() => setComentarios([]));
+  }, [id, intento]);
+
+  useEffect(() => {
+    if (!usuario || !reporte?.id_lugar) return;
+    getFavoritos()
+      .then((lista) => setEsFavorito(lista.some((l) => l.id_lugar === reporte.id_lugar)))
+      .catch(() => {});
+  }, [usuario, reporte?.id_lugar]);
+
+  async function onFavorito() {
+    if (!usuario) return router.push('/login');
+    if (!reporte) return;
+    const nuevo = !esFavorito;
+    setEsFavorito(nuevo); // se ve al instante; si falla, vuelve atrás
+    try {
+      await cambiarFavorito(reporte.id_lugar, nuevo);
+    } catch {
+      setEsFavorito(!nuevo);
+    }
+  }
+
+  // Tocar el mismo botón otra vez saca el voto.
+  async function onVotar(valor: 1 | -1) {
+    if (!usuario) return router.push('/login');
+    if (!reporte || votando) return;
+    setVotando(true);
+    try {
+      const votos = await votarReporte(id!, reporte.mi_voto === valor ? 0 : valor);
+      setReporte({ ...reporte, ...votos });
+    } catch (e: any) {
+      Alert.alert(e.message);
+    } finally {
+      setVotando(false);
+    }
+  }
+
+  async function onComentar() {
+    const texto = nuevoComentario.trim();
+    if (!texto || comentando) return;
+    setComentando(true);
+    setErrorComentario(null);
+    try {
+      const comentario = await crearComentario(id!, texto);
+      setComentarios((lista) => [...lista, comentario]);
+      setNuevoComentario('');
+    } catch (e: any) {
+      setErrorComentario(e.message || t('community.commentError'));
+    } finally {
+      setComentando(false);
+    }
+  }
+
+  function pedirBorrarComentario(comentario: Comentario) {
+    if (Platform.OS === 'web') {
+      if (window.confirm(t('community.deleteCommentTitle'))) borrarComentario(comentario);
+      return;
+    }
+    setComentarioABorrar(comentario);
+  }
+
+  function borrarComentario(comentario: Comentario) {
+    setComentarioABorrar(null);
+    eliminarComentario(id!, comentario.id_comentario)
+      .then(() => setComentarios((lista) => lista.filter((c) => c.id_comentario !== comentario.id_comentario)))
+      .catch((e) => Alert.alert(e.message));
+  }
 
   // "Ver traducción": al idioma actual de la app. Si cambia el idioma se
   // vuelve al original, para no mostrar una traducción al idioma anterior.
@@ -148,7 +249,7 @@ export default function ReportDetailsScreen() {
         <BotonRedondo icono="chevron-back" onPress={volver} accessibilityLabel={t('reportDetails.back')} />
       </View>
 
-      <View className="-mt-7 flex-1 rounded-t-[28px] bg-superficie">
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="-mt-7 flex-1 rounded-t-[28px] bg-superficie">
         {loading ? (
           <ActivityIndicator color={c.boton} className="mt-8" />
         ) : reporte ? (
@@ -158,7 +259,17 @@ export default function ReportDetailsScreen() {
                 {t(`selectLugar.categorias.${reporte.lugar.categoria}`, reporte.lugar.categoria)}
               </Text>
             ) : null}
-            <Text className="mt-1 font-nunito9 text-[32px] leading-10 text-texto">{reporte.lugar?.nombre}</Text>
+            <View className="mt-1 flex-row items-start gap-3">
+              <Text className="flex-1 font-nunito9 text-[32px] leading-10 text-texto">{reporte.lugar?.nombre}</Text>
+              <Tocable
+                onPress={onFavorito}
+                accessibilityLabel={esFavorito ? t('community.unsave') : t('community.save')}
+                accessibilityState={{ selected: esFavorito }}
+                className="h-12 w-12 items-center justify-center rounded-full border border-borde"
+              >
+                <Ionicons name={esFavorito ? 'star' : 'star-outline'} size={24} color={esFavorito ? '#F5A524' : c.secundario} />
+              </Tocable>
+            </View>
 
             {estado ? (
               <View className="mt-5 rounded-[20px] p-5" style={{ backgroundColor: colorEstado(estado.estado) + (c.oscuro ? '26' : '14') }}>
@@ -228,6 +339,97 @@ export default function ReportDetailsScreen() {
               ) : null}
             </View>
 
+            {/* Votos: ¿el reporte coincide con lo que ve la gente? */}
+            <View className="mt-3 flex-row flex-wrap items-center gap-2.5">
+              <Text className="mr-1 font-nunito8 text-[15px] text-secundario">
+                {reporte.es_propio ? t('community.votesOwn') : t('community.useful')}
+              </Text>
+              <BotonVoto
+                icono={reporte.mi_voto === 1 ? 'thumbs-up' : 'thumbs-up-outline'}
+                cantidad={reporte.votos_positivos ?? 0}
+                activo={reporte.mi_voto === 1}
+                color="#16A34A"
+                deshabilitado={!!reporte.es_propio}
+                etiqueta={t('community.voteUp', { count: reporte.votos_positivos ?? 0 })}
+                onPress={() => onVotar(1)}
+              />
+              <BotonVoto
+                icono={reporte.mi_voto === -1 ? 'thumbs-down' : 'thumbs-down-outline'}
+                cantidad={reporte.votos_negativos ?? 0}
+                activo={reporte.mi_voto === -1}
+                color={c.peligro}
+                deshabilitado={!!reporte.es_propio}
+                etiqueta={t('community.voteDown', { count: reporte.votos_negativos ?? 0 })}
+                onPress={() => onVotar(-1)}
+              />
+            </View>
+
+            {/* Comentarios: para actualizar o completar el reporte. */}
+            <Text className="mb-2 mt-7 font-nunito9 text-lg text-texto">
+              {t('community.comments')} {comentarios.length ? `(${comentarios.length})` : ''}
+            </Text>
+            {comentarios.length === 0 ? (
+              <Text className="mb-3 font-nunito text-[15px] text-secundario">{t('community.noComments')}</Text>
+            ) : (
+              <View className="mb-3 gap-2">
+                {comentarios.map((com) => (
+                  <View key={com.id_comentario} className="rounded-[18px] border border-borde bg-tarjeta px-4 py-3">
+                    <View className="flex-row items-center justify-between gap-2">
+                      <Text className="font-nunito8 text-[13px] text-secundario">
+                        {com.es_propio ? `${t('community.you')} · ` : ''}
+                        {haceCuanto(com.fecha, t)}
+                      </Text>
+                      {com.puede_eliminar ? (
+                        <Pressable
+                          onPress={() => pedirBorrarComentario(com)}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('community.deleteComment')}
+                          hitSlop={10}
+                          className="h-8 w-8 items-center justify-center"
+                        >
+                          <Ionicons name="trash-outline" size={18} color={c.secundario} />
+                        </Pressable>
+                      ) : null}
+                    </View>
+                    <Text className="mt-1 font-nunito text-base leading-6 text-texto">{com.contenido}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            {usuario ? (
+              <>
+                <View className="flex-row items-end gap-2">
+                  <TextInput
+                    value={nuevoComentario}
+                    onChangeText={setNuevoComentario}
+                    placeholder={t('community.commentPlaceholder')}
+                    placeholderTextColor={c.secundario}
+                    accessibilityLabel={t('community.commentPlaceholder')}
+                    maxLength={280}
+                    multiline
+                    className="min-h-12 flex-1 rounded-2xl border-[1.5px] border-borde bg-superficie px-4 py-3 font-nunito text-base text-texto"
+                  />
+                  <Tocable
+                    onPress={onComentar}
+                    disabled={!nuevoComentario.trim() || comentando}
+                    accessibilityLabel={t('community.send')}
+                    className={`h-12 w-12 items-center justify-center rounded-full bg-boton ${!nuevoComentario.trim() || comentando ? 'opacity-50' : ''}`}
+                  >
+                    {comentando ? <ActivityIndicator color="#FFFFFF" /> : <Ionicons name="send" size={20} color="#FFFFFF" />}
+                  </Tocable>
+                </View>
+                {errorComentario ? (
+                  <Text className="mt-2 font-nunito text-[15px] text-peligro" accessibilityLiveRegion="polite">
+                    {errorComentario}
+                  </Text>
+                ) : null}
+              </>
+            ) : (
+              <Pressable onPress={() => router.push('/login')} accessibilityRole="button" className="min-h-11 justify-center self-start">
+                <Text className="font-nunito8 text-[15px] text-enlace">{t('community.loginToComment')}</Text>
+              </Pressable>
+            )}
+
             <View className="flex-1 justify-end gap-2.5 pt-8">
               {reporte.puede_eliminar ? (
                 <Boton titulo={t('reportDetails.delete')} variante="peligro" icono="trash-outline" onPress={pedirEliminar} />
@@ -249,7 +451,7 @@ export default function ReportDetailsScreen() {
         ) : (
           <EstadoVacio icono="document-outline" titulo={t('reportDetails.notFound')} />
         )}
-      </View>
+      </KeyboardAvoidingView>
 
       <HojaInferior visible={hojaDenuncia !== 'cerrada'} onCerrar={cerrarDenuncia} etiquetaCerrar={t('reportDetails.close')}>
         {hojaDenuncia === 'enviada' ? (
@@ -301,6 +503,21 @@ export default function ReportDetailsScreen() {
         )}
       </HojaInferior>
 
+      <HojaInferior visible={!!comentarioABorrar} onCerrar={() => setComentarioABorrar(null)} etiquetaCerrar={t('reportDetails.close')}>
+        <Text className="font-nunito9 text-[22px] text-texto">{t('community.deleteCommentTitle')}</Text>
+        <Text className="mb-6 mt-1 font-nunito text-base text-secundario" numberOfLines={3}>
+          “{comentarioABorrar?.contenido}”
+        </Text>
+        <Boton
+          titulo={t('reportDetails.deleteConfirm')}
+          variante="peligro"
+          icono="trash-outline"
+          onPress={() => comentarioABorrar && borrarComentario(comentarioABorrar)}
+        />
+        <View className="h-2.5" />
+        <Boton titulo={t('reportDetails.cancel')} variante="neutro" onPress={() => setComentarioABorrar(null)} />
+      </HojaInferior>
+
       <HojaInferior visible={hojaEliminar} onCerrar={() => setHojaEliminar(false)} etiquetaCerrar={t('reportDetails.close')}>
         <View className="mb-4 h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: c.peligro + '1F' }}>
           <Ionicons name="trash-outline" size={26} color={c.peligro} />
@@ -327,5 +544,41 @@ export default function ReportDetailsScreen() {
         <Boton titulo={t('reportDetails.cancel')} variante="neutro" onPress={() => setHojaEliminar(false)} />
       </HojaInferior>
     </View>
+  );
+}
+
+// Botón de voto: ícono + cantidad. Relleno con su color cuando es el voto propio.
+function BotonVoto({
+  icono,
+  cantidad,
+  activo,
+  color,
+  deshabilitado,
+  etiqueta,
+  onPress,
+}: {
+  icono: IconName;
+  cantidad: number;
+  activo: boolean;
+  color: string;
+  deshabilitado: boolean;
+  etiqueta: string;
+  onPress: () => void;
+}) {
+  const c = useColores();
+  return (
+    <Tocable
+      onPress={onPress}
+      disabled={deshabilitado}
+      accessibilityLabel={etiqueta}
+      accessibilityState={{ selected: activo, disabled: deshabilitado }}
+      className="min-h-11 flex-row items-center gap-1.5 rounded-full border-[1.5px] px-4"
+      style={{ borderColor: activo ? color : c.borde, backgroundColor: activo ? color + '1F' : 'transparent', opacity: deshabilitado ? 0.6 : 1 }}
+    >
+      <Ionicons name={icono} size={18} color={activo ? color : c.secundario} />
+      <Text className="font-nunito8 text-[15px]" style={{ color: activo ? color : c.texto }}>
+        {cantidad}
+      </Text>
+    </Tocable>
   );
 }

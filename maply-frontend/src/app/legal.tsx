@@ -12,22 +12,22 @@ const CONTACTO = 'maply.services@gmail.com';
 // Las dos versiones tienen que decir lo mismo: si cambiás una, cambiá la otra.
 const SECCIONES: Record<'es' | 'en', [string, string][]> = {
   es: [
-    ['Política de privacidad', 'Última actualización: septiembre de 2026.'],
+    ['Política de privacidad', 'Última actualización: noviembre de 2026.'],
     [
       'Qué datos guardamos',
-      'Nombre, email, contraseña (guardada cifrada con bcrypt, nadie puede leerla), teléfono si lo cargás, y los reportes que publicás (texto, lugar, categoría y fecha). Tu ubicación GPS se usa solo en tu teléfono para centrar el mapa: no la guardamos en nuestros servidores.',
+      'Nombre, email, contraseña (guardada cifrada con bcrypt, nadie puede leerla), teléfono si lo cargás, los reportes y comentarios que publicás (texto, lugar, categoría y fecha), tus votos, los lugares que guardás en favoritos y las notificaciones que te generamos. Tu ubicación GPS se usa solo en tu teléfono para centrar el mapa: no la guardamos en nuestros servidores.',
     ],
     [
       'Para qué',
-      'Para que puedas iniciar sesión, publicar reportes y ver el estado de los lugares. No vendemos tus datos, no mostramos publicidad y no usamos herramientas de seguimiento o analytics.',
+      'Para que puedas iniciar sesión, publicar reportes, votarlos, comentarlos, guardar lugares y recibir avisos cuando alguien reporta en ellos. No vendemos tus datos, no mostramos publicidad y no usamos herramientas de seguimiento o analytics.',
     ],
     [
       'Con quién se comparten',
-      'Mapbox (mapas): recibe tu dirección IP y la zona del mapa que mirás para poder mostrarlo. Google (Gmail): si pedís recuperar tu contraseña, el código te llega por mail a través de Gmail. MyMemory (traducción): si tocás "Ver traducción", recibe el texto de ese reporte, que ya es público. El servidor donde se aloja la base de datos. Nadie más. Los reportes se muestran públicamente sin tu nombre ni tu email.',
+      'Mapbox (mapas): recibe tu dirección IP y la zona del mapa que mirás para poder mostrarlo. Google (Gmail): si pedís recuperar tu contraseña, el código te llega por mail a través de Gmail. MyMemory (traducción): si tocás "Ver traducción", recibe el texto de ese reporte, que ya es público. El servidor donde se aloja la base de datos. Nadie más. Los reportes y comentarios se muestran públicamente sin tu nombre ni tu email; tus votos solo se muestran como totales y tus favoritos los ves solo vos.',
     ],
     [
       'Tus derechos (Ley 25.326)',
-      `Podés ver, corregir o borrar tus datos. Para borrarlos, usá "Eliminar mi cuenta" en Configuración: se borra tu perfil y todos tus reportes. Para otras consultas escribí a ${CONTACTO}. La Agencia de Acceso a la Información Pública (AAIP) es el órgano de control de la Ley 25.326 y recibe reclamos.`,
+      `Podés ver, corregir o borrar tus datos. Para borrarlos, usá "Eliminar mi cuenta" en Configuración: se borran tu perfil, tus reportes, comentarios, votos, favoritos y notificaciones. Para otras consultas escribí a ${CONTACTO}. La Agencia de Acceso a la Información Pública (AAIP) es el órgano de control de la Ley 25.326 y recibe reclamos.`,
     ],
     [
       'Seguridad',
@@ -45,11 +45,11 @@ const SECCIONES: Record<'es' | 'en', [string, string][]> = {
     ],
     [
       'Uso aceptable',
-      'No se permite publicar reportes falsos, insultos, datos personales de otras personas, publicidad ni contenido ilegal. Podemos ocultar reportes denunciados y bloquear cuentas que no cumplan estas reglas.',
+      'No se permite publicar reportes o comentarios falsos, insultos, datos personales de otras personas, publicidad ni contenido ilegal. Tampoco usar varias cuentas o programas para inflar votos. Podemos ocultar reportes denunciados, borrar comentarios y bloquear cuentas que no cumplan estas reglas.',
     ],
     [
       'Contenido',
-      'Los reportes son de quien los publica. Al publicarlos nos das permiso para mostrarlos dentro de la app. Si algo infringe tus derechos, escribinos a ' +
+      'Los reportes y comentarios son de quien los publica. Al publicarlos nos das permiso para mostrarlos dentro de la app. Si algo infringe tus derechos, escribinos a ' +
         CONTACTO +
         ' y lo revisamos.',
     ],
@@ -59,22 +59,22 @@ const SECCIONES: Record<'es' | 'en', [string, string][]> = {
     ],
   ],
   en: [
-    ['Privacy policy', 'Last updated: September 2026.'],
+    ['Privacy policy', 'Last updated: November 2026.'],
     [
       'What data we store',
-      'Name, email, password (stored encrypted with bcrypt, nobody can read it), phone number if you add one, and the reports you post (text, place, category and date). Your GPS location is only used on your phone to center the map: we do not store it on our servers.',
+      'Name, email, password (stored encrypted with bcrypt, nobody can read it), phone number if you add one, the reports and comments you post (text, place, category and date), your votes, the places you save as favorites and the notifications we create for you. Your GPS location is only used on your phone to center the map: we do not store it on our servers.',
     ],
     [
       'What for',
-      'So you can sign in, post reports and see the status of places. We do not sell your data, show ads or use tracking or analytics tools.',
+      'So you can sign in, post, vote on and comment on reports, save places and get notified when someone reports them. We do not sell your data, show ads or use tracking or analytics tools.',
     ],
     [
       'Who we share it with',
-      'Mapbox (maps): receives your IP address and the map area you are viewing so it can display it. Google (Gmail): if you ask to reset your password, the code is emailed to you through Gmail. MyMemory (translation): if you tap "See translation", it receives the text of that report, which is already public. The server that hosts the database. Nobody else. Reports are shown publicly without your name or email.',
+      'Mapbox (maps): receives your IP address and the map area you are viewing so it can display it. Google (Gmail): if you ask to reset your password, the code is emailed to you through Gmail. MyMemory (translation): if you tap "See translation", it receives the text of that report, which is already public. The server that hosts the database. Nobody else. Reports and comments are shown publicly without your name or email; your votes are only shown as totals and only you can see your favorites.',
     ],
     [
       'Your rights (Argentine Law 25.326)',
-      `You can view, correct or delete your data. To delete it, use "Delete my account" in Settings: your profile and all your reports are deleted. For other requests, write to ${CONTACTO}. The Agency for Access to Public Information (AAIP) is the authority that enforces Law 25.326 and handles complaints.`,
+      `You can view, correct or delete your data. To delete it, use "Delete my account" in Settings: your profile, reports, comments, votes, favorites and notifications are deleted. For other requests, write to ${CONTACTO}. The Agency for Access to Public Information (AAIP) is the authority that enforces Law 25.326 and handles complaints.`,
     ],
     [
       'Security',
@@ -92,11 +92,11 @@ const SECCIONES: Record<'es' | 'en', [string, string][]> = {
     ],
     [
       'Acceptable use',
-      'Fake reports, insults, other people’s personal data, advertising and illegal content are not allowed. We may hide reported posts and block accounts that break these rules.',
+      'Fake reports or comments, insults, other people’s personal data, advertising and illegal content are not allowed. Using several accounts or programs to inflate votes is not allowed either. We may hide reported posts, delete comments and block accounts that break these rules.',
     ],
     [
       'Content',
-      'Reports belong to the people who post them. By posting, you allow us to show them in the app. If something infringes your rights, write to ' +
+      'Reports and comments belong to the people who post them. By posting, you allow us to show them in the app. If something infringes your rights, write to ' +
         CONTACTO +
         ' and we will review it.',
     ],

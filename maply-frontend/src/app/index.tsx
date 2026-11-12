@@ -12,7 +12,7 @@ import { ReportCard } from '@/components/ReportCard';
 import { Boton, BotonRedondo, EstadoVacio, Tocable, etiquetaReporte, sombraSuave } from '@/components/ui';
 import { textoDelReporte } from '@/components/ReportCard';
 import { useColores } from '@/constants/Colors';
-import { bienvenidaVista, getReportes, getUsuarioActual, logout, type Reporte, type Usuario } from '@/services/api';
+import { bienvenidaVista, getNotificaciones, getReportes, getUsuarioActual, logout, type Reporte, type Usuario } from '@/services/api';
 import { useUbicacionActual } from '@/hooks/use-ubicacion';
 
 // La primera vez se muestra la bienvenida; después, directo al mapa.
@@ -37,6 +37,7 @@ function HomeScreen() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [elegidoId, setElegidoId] = useState<number | null>(null);
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
+  const [sinLeer, setSinLeer] = useState(0);
   // Al sumarle 1 se vuelven a pedir los reportes (botón "Reintentar").
   const [intento, setIntento] = useState(0);
   const mapaRef = useRef<MapaMaplyHandle>(null);
@@ -56,7 +57,13 @@ function HomeScreen() {
         .catch((e) => activo && setError(e.message))
         .finally(() => activo && setLoading(false));
 
-      getUsuarioActual().then((u) => activo && setUsuario(u));
+      getUsuarioActual().then((u) => {
+        if (!activo) return;
+        setUsuario(u);
+        // Avisos de reportes nuevos en lugares favoritos (punto en la campana).
+        if (u) getNotificaciones().then((n) => activo && setSinLeer(n.filter((x) => !x.leida).length), () => {});
+        else setSinLeer(0);
+      });
 
       return () => {
         activo = false;
@@ -153,6 +160,23 @@ function HomeScreen() {
           />
         </View>
         <View className="flex-row items-center gap-2">
+          {usuario ? (
+            <View>
+              <BotonRedondo
+                icono="notifications-outline"
+                onPress={() => router.push('/notificaciones')}
+                accessibilityLabel={sinLeer ? t('community.notificationsUnread', { count: sinLeer }) : t('community.notifications')}
+              />
+              {sinLeer > 0 ? (
+                <View
+                  pointerEvents="none"
+                  className="absolute -right-1 -top-1 h-5 min-w-5 items-center justify-center rounded-full bg-peligro px-1"
+                >
+                  <Text className="font-nunito9 text-[11px] text-white">{sinLeer > 9 ? '9+' : sinLeer}</Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
           <BotonRedondo
             icono="settings-outline"
             onPress={() => router.push('/configuracion')}

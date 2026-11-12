@@ -1,12 +1,19 @@
 const pool = require('../config/db');
 const { esAdmin } = require('../config/roles');
+const { notificarFavoritos } = require('./comunidadController');
+
+// Totales de votos y comentarios de cada reporte (subconsultas por índice).
+const CONTADORES = `
+  (SELECT COUNT(*) FROM voto_reporte v WHERE v.id_reporte = r.id_reporte AND v.valor = 1) AS votos_positivos,
+  (SELECT COUNT(*) FROM voto_reporte v WHERE v.id_reporte = r.id_reporte AND v.valor = -1) AS votos_negativos,
+  (SELECT COUNT(*) FROM comentario c WHERE c.id_reporte = r.id_reporte AND c.activo = 1) AS total_comentarios`;
 
 async function getReportes(req, res) {
   try {
     const [filas] = await pool.query(
       // Columnas explícitas: nunca devolver id_usuario (quién publicó cada reporte).
       `SELECT r.id_reporte, r.id_lugar, r.contenido, r.categoria_reporte, r.fecha_registro,
-              l.nombre AS lugar_nombre, l.latitud AS lugar_latitud, l.longitud AS lugar_longitud
+              l.nombre AS lugar_nombre, l.latitud AS lugar_latitud, l.longitud AS lugar_longitud, ${CONTADORES}
        FROM reporte r
        JOIN lugar l ON r.id_lugar = l.id_lugar
        WHERE r.activo = 1
@@ -30,17 +37,20 @@ async function getReporteById(req, res) {
     // nunca se devuelve (igual que en getReportes).
     const [filas] = await pool.query(
       `SELECT r.id_reporte, r.id_usuario, r.id_lugar, r.contenido, r.categoria_reporte, r.fecha_registro,
-              l.nombre AS lugar_nombre, l.categoria AS lugar_categoria, l.latitud AS lugar_latitud, l.longitud AS lugar_longitud
+              l.nombre AS lugar_nombre, l.categoria AS lugar_categoria, l.latitud AS lugar_latitud, l.longitud AS lugar_longitud,
+              ${CONTADORES},
+              (SELECT valor FROM voto_reporte v WHERE v.id_reporte = r.id_reporte AND v.id_usuario = ?) AS mi_voto
        FROM reporte r
        JOIN lugar l ON r.id_lugar = l.id_lugar
        WHERE r.id_reporte = ? AND r.activo = 1`,
-      [req.params.id]
+      [req.usuario?.id_usuario ?? 0, req.params.id]
     );
     if (!filas[0]) return res.status(404).json({ error: 'Reporte no encontrado' });
-    const { id_usuario, lugar_nombre, lugar_categoria, lugar_latitud, lugar_longitud, ...reporte } = filas[0];
+    const { id_usuario, lugar_nombre, lugar_categoria, lugar_latitud, lugar_longitud, mi_voto, ...reporte } = filas[0];
     const esPropio = !!req.usuario && req.usuario.id_usuario === id_usuario;
     res.json({
       ...reporte,
+      mi_voto: Number(mi_voto) || 0,
       es_propio: esPropio,
       puede_eliminar: esPropio || esAdmin(req.usuario),
       lugar: { nombre: lugar_nombre, categoria: lugar_categoria, latitud: lugar_latitud, longitud: lugar_longitud },
@@ -67,6 +77,7 @@ async function crearReporte(req, res) {
       'INSERT INTO reporte (id_usuario, id_lugar, contenido, categoria_reporte, fecha_registro, activo) VALUES (?, ?, ?, ?, NOW(), 1)',
       [req.usuario.id_usuario, id_lugar, contenido ?? '', categoria_reporte]
     );
+    await notificarFavoritos(resultado.insertId, id_lugar, req.usuario.id_usuario);
     res.status(201).json({ id_reporte: resultado.insertId, id_lugar, contenido, categoria_reporte });
   } catch (error) {
     if (error.code === 'ER_NO_REFERENCED_ROW_2') return res.status(400).json({ error: 'Ese lugar no existe' });

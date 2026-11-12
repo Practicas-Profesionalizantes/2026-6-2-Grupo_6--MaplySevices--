@@ -33,6 +33,8 @@ tags:
     description: Establecimientos que se muestran en el mapa
   - name: Reportes
     description: Reportes colaborativos del estado de cada lugar
+  - name: Comunidad
+    description: Votos y comentarios en reportes, lugares favoritos y notificaciones
   - name: Administración
     description: Acciones reservadas al rol administrador
   - name: Estado
@@ -340,6 +342,7 @@ paths:
                   - $ref: '#/components/schemas/Reporte'
                   - type: object
                     properties:
+                      mi_voto: { type: integer, enum: [-1, 0, 1], description: 'Voto de quien mira (0 si no votó o no inició sesión)' }
                       es_propio: { type: boolean, example: true }
                       puede_eliminar: { type: boolean, example: true }
         '404': { $ref: '#/components/responses/NoEncontrado' }
@@ -443,6 +446,187 @@ paths:
         '401': { $ref: '#/components/responses/NoAutorizado' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
         '429': { $ref: '#/components/responses/Limite' }
+
+  /reportes/{id}/voto:
+    put:
+      tags: [Comunidad]
+      summary: Votar un reporte
+      description: |
+        Requiere login. `1` = el reporte sirve / coincide, `-1` = no coincide, `0` = sacar el voto.
+        Un voto por persona por reporte: votar de nuevo lo reemplaza. No se puede votar el reporte propio.
+        Límite: 120 votos por hora por usuario.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdReporte'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [valor]
+              properties:
+                valor: { type: integer, enum: [-1, 0, 1], example: 1 }
+      responses:
+        '200':
+          description: Totales actualizados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Votos' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '403':
+          description: Es el reporte de quien vota
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: No podés votar tu propio reporte }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '429': { $ref: '#/components/responses/Limite' }
+
+  /reportes/{id}/comentarios:
+    get:
+      tags: [Comunidad]
+      summary: Comentarios de un reporte
+      description: No requiere login. Del más viejo al más nuevo (máximo 100). Nunca devuelve quién escribió cada comentario; con token, indica cuáles son propios y cuáles puede eliminar quien mira.
+      parameters:
+        - $ref: '#/components/parameters/IdReporte'
+      responses:
+        '200':
+          description: Lista de comentarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Comentario' }
+    post:
+      tags: [Comunidad]
+      summary: Comentar un reporte
+      description: Requiere login. Entre 1 y 280 caracteres. Límite de 30 comentarios por hora por usuario.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdReporte'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contenido]
+              properties:
+                contenido: { type: string, minLength: 1, maxLength: 280, example: Ya se normalizó la fila }
+      responses:
+        '201':
+          description: Comentario publicado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Comentario' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '429': { $ref: '#/components/responses/Limite' }
+
+  /reportes/{id}/comentarios/{id_comentario}:
+    delete:
+      tags: [Comunidad]
+      summary: Eliminar un comentario
+      description: Requiere login. El autor elimina el suyo y el administrador, cualquiera (baja lógica).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdReporte'
+        - name: id_comentario
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1, example: 40 }
+      responses:
+        '200':
+          description: Comentario eliminado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '403':
+          description: El comentario es de otro usuario y quien lo pide no es administrador
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /favoritos:
+    get:
+      tags: [Comunidad]
+      summary: Mis lugares favoritos
+      description: Requiere login. El último guardado primero.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Lugares guardados
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Lugar' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+
+  /favoritos/{id_lugar}:
+    parameters:
+      - name: id_lugar
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1, example: 3 }
+    put:
+      tags: [Comunidad]
+      summary: Guardar un lugar en favoritos
+      description: Requiere login. Si ya estaba guardado no pasa nada. Cuando alguien publica un reporte en ese lugar, se crea una notificación.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Guardado
+          content:
+            application/json:
+              example: { id_lugar: 3, favorito: true }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    delete:
+      tags: [Comunidad]
+      summary: Quitar un lugar de favoritos
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Quitado
+          content:
+            application/json:
+              example: { id_lugar: 3, favorito: false }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+
+  /notificaciones:
+    get:
+      tags: [Comunidad]
+      summary: Mis notificaciones
+      description: Requiere login. Las últimas 50. Hoy se generan cuando otra persona publica un reporte en un lugar que guardaste en favoritos.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Notificaciones, la más nueva primero
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Notificacion' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+
+  /notificaciones/leidas:
+    patch:
+      tags: [Comunidad]
+      summary: Marcar todas las notificaciones como leídas
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Listo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
 
   /admin/usuarios/{id}/bloqueo:
     patch:
@@ -616,6 +800,9 @@ components:
         contenido: { type: string, example: Hay como 20 personas esperando }
         categoria_reporte: { $ref: '#/components/schemas/CategoriaReporte' }
         fecha_registro: { type: string, format: date-time }
+        votos_positivos: { type: integer, example: 4 }
+        votos_negativos: { type: integer, example: 1 }
+        total_comentarios: { type: integer, example: 2 }
         lugar:
           type: object
           properties:
@@ -623,6 +810,30 @@ components:
             categoria: { $ref: '#/components/schemas/CategoriaLugar' }
             latitud: { type: number, example: -34.5813 }
             longitud: { type: number, example: -58.4064 }
+    Votos:
+      type: object
+      properties:
+        votos_positivos: { type: integer, example: 4 }
+        votos_negativos: { type: integer, example: 1 }
+        mi_voto: { type: integer, enum: [-1, 0, 1], example: 1 }
+    Comentario:
+      type: object
+      properties:
+        id_comentario: { type: integer, example: 40 }
+        contenido: { type: string, example: Ya se normalizó la fila }
+        fecha: { type: string, format: date-time }
+        es_propio: { type: boolean, example: false }
+        puede_eliminar: { type: boolean, example: false }
+    Notificacion:
+      type: object
+      properties:
+        id_notificacion: { type: integer, example: 1 }
+        id_reporte: { type: integer, example: 87 }
+        tipo: { type: string, example: reporte_favorito }
+        leida: { type: boolean, example: false }
+        fecha_notificacion: { type: string, format: date-time }
+        lugar_nombre: { type: string, example: Banco Nación Villa Urquiza }
+        categoria_reporte: { $ref: '#/components/schemas/CategoriaReporte' }
     EstadoActual:
       type: object
       properties:

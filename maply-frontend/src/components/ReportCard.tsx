@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/constants/i18n';
 import { textoEstado, useColores } from '@/constants/Colors';
@@ -17,8 +18,10 @@ export function textoDelReporte(reporte: Reporte): string | null {
 
 export function ReportCard({ reporte }: { reporte: Reporte }) {
   const { t } = useTranslation();
-  const { oscuro } = useColores();
+  const { oscuro, secundario } = useColores();
   const texto = textoDelReporte(reporte);
+  const votos = reporte.votos_positivos ?? 0;
+  const comentarios = reporte.total_comentarios ?? 0;
   return (
     <View className="flex-row items-center gap-4 rounded-[20px] border border-borde bg-tarjeta p-4">
       <IconoEstado categoria={reporte.categoria_reporte} />
@@ -42,6 +45,22 @@ export function ReportCard({ reporte }: { reporte: Reporte }) {
           <Text className="mt-0.5 font-nunito text-[15px] text-secundario" numberOfLines={1}>
             {texto}
           </Text>
+        ) : null}
+        {votos > 0 || comentarios > 0 ? (
+          <View className="mt-1 flex-row items-center gap-3">
+            {votos > 0 ? (
+              <View className="flex-row items-center gap-1">
+                <Ionicons name="thumbs-up-outline" size={14} color={secundario} />
+                <Text className="font-nunito8 text-[13px] text-secundario">{votos}</Text>
+              </View>
+            ) : null}
+            {comentarios > 0 ? (
+              <View className="flex-row items-center gap-1">
+                <Ionicons name="chatbubble-outline" size={14} color={secundario} />
+                <Text className="font-nunito8 text-[13px] text-secundario">{comentarios}</Text>
+              </View>
+            ) : null}
+          </View>
         ) : null}
       </View>
     </View>
