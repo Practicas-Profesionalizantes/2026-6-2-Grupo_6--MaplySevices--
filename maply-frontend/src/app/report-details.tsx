@@ -7,9 +7,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { MapaMaply } from '@/components/MapaMaply';
 import { textoDelReporte } from '@/components/ReportCard';
-import { BotonRedondo, Boton, EstadoVacio, ICONOS_ESTADO, haceCuanto, volver } from '@/components/ui';
+import { BotonRedondo, Boton, EstadoVacio, HojaInferior, ICONOS_ESTADO, OpcionHoja, haceCuanto, volver } from '@/components/ui';
 import { colorEstado, textoEstado, useColores } from '@/constants/Colors';
-import { denunciarReporte, getReporteDetalle, getUsuarioActual, getEstadoActualLugar, traducirReporte, type Reporte, type EstadoActualLugar } from '@/services/api';
+import { denunciarReporte, eliminarReporte, getReporteDetalle, getUsuarioActual, getEstadoActualLugar, traducirReporte, type Reporte, type EstadoActualLugar } from '@/services/api';
 
 export default function ReportDetailsScreen() {
   const { t, i18n } = useTranslation();
@@ -63,24 +63,64 @@ export default function ReportDetailsScreen() {
 
   // Denunciar (lo exige Apple para contenido publicado por usuarios). Con 3
   // denuncias de usuarios distintos el backend oculta el reporte.
-  const enviarDenuncia = (motivo: string) =>
+  // Se usa una hoja propia en lugar de Alert.alert, que en Android se ve
+  // con el diálogo gris del sistema y no con el diseño de la app.
+  const [hojaDenuncia, setHojaDenuncia] = useState<'cerrada' | 'motivos' | 'enviando' | 'enviada'>('cerrada');
+  const [errorDenuncia, setErrorDenuncia] = useState<string | null>(null);
+  const cerrarDenuncia = () => {
+    setHojaDenuncia('cerrada');
+    setErrorDenuncia(null);
+  };
+
+  const enviarDenuncia = (motivo: string) => {
+    setHojaDenuncia('enviando');
+    setErrorDenuncia(null);
     denunciarReporte(id!, motivo)
-      .then(() => Alert.alert(t('reportDetails.reportThanks')))
-      .catch((e) => Alert.alert(t('reportDetails.reportError'), e.message));
+      .then(() => setHojaDenuncia('enviada'))
+      .catch((e) => {
+        setErrorDenuncia(e.message || t('reportDetails.reportError'));
+        setHojaDenuncia('motivos');
+      });
+  };
 
   const pedirDenuncia = async () => {
     // Sin sesión el backend responde 401 "Falta el token": mejor mandar a login, igual que "+ Nuevo reporte".
     if (!(await getUsuarioActual())) return router.push('/login');
-    // Alert.alert en web no muestra botones (igual que en Configuración).
+    // En web el Modal no se ve igual: se mantiene la confirmación simple del navegador.
     if (Platform.OS === 'web') {
-      if (window.confirm(t('reportDetails.reportTitle'))) enviarDenuncia('Inapropiado');
+      if (window.confirm(t('reportDetails.reportTitle'))) {
+        denunciarReporte(id!, 'Inapropiado')
+          .then(() => window.alert(t('reportDetails.reportThanks')))
+          .catch((e) => window.alert(e.message));
+      }
       return;
     }
-    Alert.alert(t('reportDetails.reportTitle'), undefined, [
-      { text: t('reportDetails.reasonFalse'), onPress: () => enviarDenuncia('Información falsa') },
-      { text: t('reportDetails.reasonOffensive'), onPress: () => enviarDenuncia('Ofensivo o spam') },
-      { text: t('reportDetails.cancel'), style: 'cancel' },
-    ]);
+    setHojaDenuncia('motivos');
+  };
+
+  // Eliminar (MVP-06 y MVP-07): el botón solo aparece si el backend dice
+  // que quien mira es el autor o un administrador.
+  const [hojaEliminar, setHojaEliminar] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
+  const confirmarEliminar = () => {
+    setEliminando(true);
+    setErrorEliminar(null);
+    eliminarReporte(id!)
+      .then(() => {
+        setHojaEliminar(false);
+        volver();
+      })
+      .catch((e) => setErrorEliminar(e.message || t('reportDetails.deleteError')))
+      .finally(() => setEliminando(false));
+  };
+  const pedirEliminar = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(t('reportDetails.deleteTitle'))) confirmarEliminar();
+      return;
+    }
+    setErrorEliminar(null);
+    setHojaEliminar(true);
   };
 
   const lat = Number(reporte?.lugar?.latitud);
@@ -188,8 +228,14 @@ export default function ReportDetailsScreen() {
               ) : null}
             </View>
 
-            <View className="flex-1 justify-end pt-8">
-              <Boton titulo={t('reportDetails.report')} variante="peligro" icono="flag-outline" onPress={pedirDenuncia} />
+            <View className="flex-1 justify-end gap-2.5 pt-8">
+              {reporte.puede_eliminar ? (
+                <Boton titulo={t('reportDetails.delete')} variante="peligro" icono="trash-outline" onPress={pedirEliminar} />
+              ) : null}
+              {/* No tiene sentido denunciar un reporte propio. */}
+              {!reporte.es_propio ? (
+                <Boton titulo={t('reportDetails.report')} variante="peligro" icono="flag-outline" onPress={pedirDenuncia} />
+              ) : null}
             </View>
           </ScrollView>
         ) : error ? (
@@ -204,6 +250,82 @@ export default function ReportDetailsScreen() {
           <EstadoVacio icono="document-outline" titulo={t('reportDetails.notFound')} />
         )}
       </View>
+
+      <HojaInferior visible={hojaDenuncia !== 'cerrada'} onCerrar={cerrarDenuncia} etiquetaCerrar={t('reportDetails.close')}>
+        {hojaDenuncia === 'enviada' ? (
+          <View className="items-center pb-2">
+            <View className="mb-4 h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: '#16A34A1F' }}>
+              <Ionicons name="checkmark" size={34} color="#16A34A" />
+            </View>
+            <Text className="text-center font-nunito9 text-[22px] text-texto">{t('reportDetails.reportSentTitle')}</Text>
+            <Text className="mb-6 mt-1 text-center font-nunito text-base text-secundario">{t('reportDetails.reportThanks')}</Text>
+            <View className="self-stretch">
+              <Boton titulo={t('reportDetails.close')} onPress={cerrarDenuncia} />
+            </View>
+          </View>
+        ) : (
+          <>
+            <Text className="font-nunito9 text-[22px] text-texto">{t('reportDetails.reportTitle')}</Text>
+            <Text className="mb-5 mt-1 font-nunito text-[15px] text-secundario">{t('reportDetails.reportHint')}</Text>
+            {hojaDenuncia === 'enviando' ? (
+              <View className="items-center py-8">
+                <ActivityIndicator color={c.boton} />
+                <Text className="mt-3 font-nunito text-secundario">{t('reportDetails.reportSending')}</Text>
+              </View>
+            ) : (
+              <>
+                <OpcionHoja
+                  icono="alert-circle-outline"
+                  color={c.peligro}
+                  titulo={t('reportDetails.reasonFalse')}
+                  detalle={t('reportDetails.reasonFalseHint')}
+                  onPress={() => enviarDenuncia('Información falsa')}
+                />
+                <OpcionHoja
+                  icono="hand-left-outline"
+                  color="#F97316"
+                  titulo={t('reportDetails.reasonOffensive')}
+                  detalle={t('reportDetails.reasonOffensiveHint')}
+                  onPress={() => enviarDenuncia('Ofensivo o spam')}
+                />
+                {errorDenuncia ? (
+                  <Text className="mb-2 font-nunito text-[15px] text-peligro" accessibilityLiveRegion="polite">
+                    {t('reportDetails.reportError')}: {errorDenuncia}
+                  </Text>
+                ) : null}
+                <View className="h-1.5" />
+                <Boton titulo={t('reportDetails.cancel')} variante="neutro" onPress={cerrarDenuncia} />
+              </>
+            )}
+          </>
+        )}
+      </HojaInferior>
+
+      <HojaInferior visible={hojaEliminar} onCerrar={() => setHojaEliminar(false)} etiquetaCerrar={t('reportDetails.close')}>
+        <View className="mb-4 h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: c.peligro + '1F' }}>
+          <Ionicons name="trash-outline" size={26} color={c.peligro} />
+        </View>
+        <Text className="font-nunito9 text-[22px] text-texto">{t('reportDetails.deleteTitle')}</Text>
+        <Text className="mb-6 mt-1 font-nunito text-base text-secundario">
+          {reporte?.es_propio ? t('reportDetails.deleteHintOwn') : t('reportDetails.deleteHintAdmin')}
+        </Text>
+        {errorEliminar ? (
+          <Text className="mb-3 font-nunito text-[15px] text-peligro" accessibilityLiveRegion="polite">
+            {t('reportDetails.deleteError')}: {errorEliminar}
+          </Text>
+        ) : null}
+        <Pressable
+          onPress={confirmarEliminar}
+          disabled={eliminando}
+          accessibilityRole="button"
+          className={`min-h-14 flex-row items-center justify-center gap-2 rounded-[18px] bg-peligro ${eliminando ? 'opacity-60' : ''}`}
+        >
+          {eliminando ? <ActivityIndicator color="#FFFFFF" /> : <Ionicons name="trash-outline" size={20} color="#FFFFFF" />}
+          <Text className="font-nunito8 text-base text-white">{t('reportDetails.deleteConfirm')}</Text>
+        </Pressable>
+        <View className="h-2.5" />
+        <Boton titulo={t('reportDetails.cancel')} variante="neutro" onPress={() => setHojaEliminar(false)} />
+      </HojaInferior>
     </View>
   );
 }

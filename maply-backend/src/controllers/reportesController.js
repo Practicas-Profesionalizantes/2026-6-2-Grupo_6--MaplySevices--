@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { esAdmin } = require('../config/roles');
 
 async function getReportes(req, res) {
   try {
@@ -25,9 +26,10 @@ async function getReportes(req, res) {
 
 async function getReporteById(req, res) {
   try {
-    // Sin id_usuario, igual que en getReportes.
+    // id_usuario se lee solo para saber si quien mira puede eliminarlo;
+    // nunca se devuelve (igual que en getReportes).
     const [filas] = await pool.query(
-      `SELECT r.id_reporte, r.id_lugar, r.contenido, r.categoria_reporte, r.fecha_registro,
+      `SELECT r.id_reporte, r.id_usuario, r.id_lugar, r.contenido, r.categoria_reporte, r.fecha_registro,
               l.nombre AS lugar_nombre, l.categoria AS lugar_categoria, l.latitud AS lugar_latitud, l.longitud AS lugar_longitud
        FROM reporte r
        JOIN lugar l ON r.id_lugar = l.id_lugar
@@ -35,9 +37,12 @@ async function getReporteById(req, res) {
       [req.params.id]
     );
     if (!filas[0]) return res.status(404).json({ error: 'Reporte no encontrado' });
-    const { lugar_nombre, lugar_categoria, lugar_latitud, lugar_longitud, ...reporte } = filas[0];
+    const { id_usuario, lugar_nombre, lugar_categoria, lugar_latitud, lugar_longitud, ...reporte } = filas[0];
+    const esPropio = !!req.usuario && req.usuario.id_usuario === id_usuario;
     res.json({
       ...reporte,
+      es_propio: esPropio,
+      puede_eliminar: esPropio || esAdmin(req.usuario),
       lugar: { nombre: lugar_nombre, categoria: lugar_categoria, latitud: lugar_latitud, longitud: lugar_longitud },
     });
   } catch (error) {
@@ -181,4 +186,31 @@ async function traducirReporte(req, res) {
   }
 }
 
-module.exports = { getReportes, getReporteById, crearReporte, getEstadoActualLugar, denunciarReporte, traducirReporte };
+// DELETE /api/reportes/:id — MVP-06 y MVP-07: el autor elimina su reporte
+// y el administrador puede eliminar cualquiera. Es una baja lógica
+// (activo = 0), igual que cuando un reporte se oculta por denuncias: no se
+// pierde el historial ni el karma ya sumado.
+async function eliminarReporte(req, res) {
+  try {
+    const id = req.params.id;
+    const [filas] = await pool.query('SELECT id_usuario FROM reporte WHERE id_reporte = ? AND activo = 1', [id]);
+    if (!filas[0]) return res.status(404).json({ error: 'Reporte no encontrado' });
+
+    const admin = esAdmin(req.usuario);
+    if (filas[0].id_usuario !== req.usuario.id_usuario && !admin) {
+      return res.status(403).json({ error: 'Solo podés eliminar tus propios reportes' });
+    }
+
+    await pool.query('UPDATE reporte SET activo = 0 WHERE id_reporte = ?', [id]);
+    // Si lo elimina un admin, las denuncias pendientes de ese reporte quedan resueltas.
+    if (admin) {
+      await pool.query("UPDATE denuncia SET estado = 'revisada' WHERE id_reporte = ? AND estado = 'pendiente'", [id]);
+    }
+    res.json({ mensaje: 'Reporte eliminado' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al eliminar el reporte' });
+  }
+}
+
+module.exports = { eliminarReporte, getReportes, getReporteById, crearReporte, getEstadoActualLugar, denunciarReporte, traducirReporte };

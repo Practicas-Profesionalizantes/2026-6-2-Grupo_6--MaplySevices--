@@ -70,7 +70,19 @@
     "translatedBy": "Automatically translated",
     "thisReport": "This report",
     "back": "Back",
-    "errorTitle": "We couldn't load the report"
+    "errorTitle": "We couldn't load the report",
+    "reasonFalseHint": "The place isn't like that or the info isn't real",
+    "reasonOffensiveHint": "Insults, ads or inappropriate content",
+    "reportHint": "After 3 reports from different users the post is hidden until we review it.",
+    "reportSentTitle": "Thanks for letting us know!",
+    "reportSending": "Sending…",
+    "close": "Close",
+    "delete": "Delete post",
+    "deleteTitle": "Delete this post?",
+    "deleteHintOwn": "It will no longer show on the map or the list. This can't be undone.",
+    "deleteHintAdmin": "You'll delete it as an administrator. Its pending reports will be marked as reviewed.",
+    "deleteConfirm": "Delete",
+    "deleteError": "Couldn't delete"
   },
   "config": {
     "title": "Settings",
@@ -82,7 +94,13 @@
     "deleteConfirm": "Delete",
     "deleteWarning": "Are you sure? Your account and reports will be deleted forever.",
     "deleteError": "Couldn't delete the account",
-    "privacy": "Privacy and terms"
+    "privacy": "Privacy and terms",
+    "theme": "Theme",
+    "themes": {
+      "auto": "Automatic",
+      "claro": "Light",
+      "oscuro": "Dark"
+    }
   },
   "auth": {
     "loginLink": "Log in",
@@ -148,5 +166,14 @@
   "common": {
     "retry": "Try again",
     "checkConnection": "Check your internet connection and try again."
+  },
+  "mapInfo": {
+    "title": "Map data",
+    "body": "The map uses data from Mapbox and OpenStreetMap, a collaborative map built by volunteers.",
+    "mapbox": "© Mapbox",
+    "osm": "© OpenStreetMap contributors",
+    "improve": "Improve this map",
+    "info": "Map information",
+    "close": "Close"
   }
 }

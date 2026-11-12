@@ -20,8 +20,10 @@ import {
 } from '@expo-google-fonts/nunito';
 
 import { Temas, useColores } from '@/constants/Colors';
+import { cargarTemaGuardado } from '@/state/tema';
 
 SplashScreen.preventAutoHideAsync();
+cargarTemaGuardado();
 
 // Variables CSS de NativeWind (bg-fondo, text-texto...) armadas desde Colors.ts.
 const aVars = (tema: typeof Temas.light) =>

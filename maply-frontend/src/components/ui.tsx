@@ -1,8 +1,9 @@
 // Piezas visuales compartidas del rediseño: botón que se achica al tocarlo,
 // botón volver, campo con etiqueta, ícono de estado y "hace X min".
 import { useState, type ComponentProps, type ReactNode } from 'react';
-import { Pressable, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Modal, Pressable, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import type { TFunction } from 'i18next';
@@ -259,3 +260,69 @@ export const sombraSuave: ViewStyle = {
   shadowOffset: { width: 0, height: 6 },
   elevation: 2,
 };
+
+// Hoja que sube desde abajo, con el mismo estilo que la de "Cerrar sesión".
+// Reemplaza a los Alert nativos de Android, que se ven fuera del diseño.
+export function HojaInferior({
+  visible,
+  onCerrar,
+  etiquetaCerrar,
+  children,
+}: {
+  visible: boolean;
+  onCerrar: () => void;
+  etiquetaCerrar: string;
+  children: ReactNode;
+}) {
+  const c = useColores();
+  const insets = useSafeAreaInsets();
+  const sinMovimiento = useReducedMotion();
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType={sinMovimiento ? 'none' : 'slide'}
+      statusBarTranslucent
+      navigationBarTranslucent
+      onRequestClose={onCerrar}
+    >
+      <Pressable className="flex-1" style={{ backgroundColor: 'rgba(10,14,31,0.45)' }} onPress={onCerrar} accessibilityLabel={etiquetaCerrar} />
+      <View className="rounded-t-[28px] px-5 pt-3" style={{ backgroundColor: c.superficie, paddingBottom: insets.bottom + 16 }}>
+        <View className="mb-5 items-center">
+          <View className="h-1.5 w-11 rounded-full bg-borde" />
+        </View>
+        {children}
+      </View>
+    </Modal>
+  );
+}
+
+// Fila tocable de una HojaInferior: ícono en círculo, título, detalle y flecha.
+export function OpcionHoja({
+  icono,
+  titulo,
+  detalle,
+  color,
+  onPress,
+}: {
+  icono: IconName;
+  titulo: string;
+  detalle?: string;
+  color?: string;
+  onPress: () => void;
+}) {
+  const c = useColores();
+  const tono = color ?? c.boton;
+  return (
+    <Tocable onPress={onPress} className="mb-2.5 min-h-[68px] flex-row items-center gap-4 rounded-[18px] border-[1.5px] border-borde bg-superficie px-4 py-3">
+      <View className="h-11 w-11 items-center justify-center rounded-full" style={{ backgroundColor: tono + '1F' }}>
+        <Ionicons name={icono} size={22} color={tono} />
+      </View>
+      <View className="flex-1">
+        <Text className="font-nunito8 text-base text-texto">{titulo}</Text>
+        {detalle ? <Text className="font-nunito text-sm text-secundario">{detalle}</Text> : null}
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={c.secundario} />
+    </Tocable>
+  );
+}

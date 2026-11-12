@@ -77,6 +77,9 @@ export type Reporte = {
   categoria_reporte: string;
   fecha_registro: string;
   lugar?: { nombre: string; categoria?: string; latitud?: string | null; longitud?: string | null };
+  // Solo en el detalle: si es de quien mira y si lo puede eliminar (autor o admin).
+  es_propio?: boolean;
+  puede_eliminar?: boolean;
 };
 
 export type EstadoActualLugar = {
@@ -180,6 +183,11 @@ export function crearReporte(data: {
     method: "POST",
     body: JSON.stringify(data),
   });
+}
+
+// Baja lógica: el autor elimina el suyo y el administrador, cualquiera.
+export function eliminarReporte(id: string | number): Promise<{ mensaje: string }> {
+  return request(`/reportes/${id}`, { method: "DELETE" });
 }
 
 export function denunciarReporte(id: string | number, motivo: string): Promise<{ mensaje: string }> {

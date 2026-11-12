@@ -6,13 +6,12 @@ const adminController = require('../controllers/adminController');
 const { verifyToken } = require('../middleware/auth');
 const { idParam, validar } = require('../validators/userRegistration');
 
-// id de la tabla `rol` que corresponde al administrador (revisar con `SELECT * FROM rol;`).
-const ADMIN_ROL_ID = Number(process.env.ADMIN_ROL_ID) || 1;
+const { esAdmin } = require('../config/roles');
 
 // El rol se lee de la base en verifyToken, así que si a alguien le sacan
 // el rol de admin pierde el acceso en el momento.
 function soloAdmin(req, res, next) {
-  if (req.usuario.id_rol !== ADMIN_ROL_ID) return res.status(403).json({ error: 'Solo para administradores' });
+  if (!esAdmin(req.usuario)) return res.status(403).json({ error: 'Solo para administradores' });
   next();
 }
 

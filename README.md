@@ -97,7 +97,7 @@ Ver **Manual de Deploy - Maply Services.docx**. Resumen:
 
 ## Endpoints principales
 
-Todas las rutas van bajo `/api`. La lista completa (14 endpoints), con ejemplos, está en Swagger.
+Todas las rutas van bajo `/api`. La lista completa (16 endpoints), con ejemplos, está en Swagger.
 
 | Método | Endpoint | Sesión | Descripción |
 |---|---|:---:|---|
@@ -111,6 +111,7 @@ Todas las rutas van bajo `/api`. La lista completa (14 endpoints), con ejemplos,
 | POST | `/reportes` | ✅ | Publica un reporte (suma karma) |
 | GET | `/reportes/lugar/{id}/estado-actual` | — | Estado del lugar en la última hora |
 | GET | `/reportes/{id}/traduccion?idioma=` | — | Traduce un reporte (es ↔ en) |
+| DELETE | `/reportes/{id}` | ✅ | Elimina un reporte propio (el admin, cualquiera) |
 | POST | `/reportes/{id}/denuncias` | ✅ | Denuncia un reporte (3 denuncias lo ocultan) |
 | PATCH | `/admin/usuarios/{id}/bloqueo` | ✅ admin | Bloquea o desbloquea un usuario |
 

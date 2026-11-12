@@ -327,6 +327,7 @@ paths:
     get:
       tags: [Reportes]
       summary: Detalle de un reporte
+      description: No requiere login. Si se envía el token, indica si el reporte es propio y si quien lo mira puede eliminarlo (autor o administrador). Nunca devuelve quién lo publicó.
       parameters:
         - $ref: '#/components/parameters/IdReporte'
       responses:
@@ -334,7 +335,38 @@ paths:
           description: Reporte encontrado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Reporte' }
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Reporte'
+                  - type: object
+                    properties:
+                      es_propio: { type: boolean, example: true }
+                      puede_eliminar: { type: boolean, example: true }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    delete:
+      tags: [Reportes]
+      summary: Eliminar un reporte
+      description: |
+        Requiere login. El autor puede eliminar su propio reporte y el administrador puede eliminar
+        cualquiera. Es una baja lógica (activo = 0). Si lo elimina un administrador, sus denuncias
+        pendientes quedan como revisadas.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdReporte'
+      responses:
+        '200':
+          description: Reporte eliminado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mensaje' }
+              example: { mensaje: Reporte eliminado }
+        '401': { $ref: '#/components/responses/NoAutorizado' }
+        '403':
+          description: El reporte es de otro usuario y quien lo pide no es administrador
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: Solo podés eliminar tus propios reportes }
         '404': { $ref: '#/components/responses/NoEncontrado' }
 
   /reportes/lugar/{id_lugar}/estado-actual:

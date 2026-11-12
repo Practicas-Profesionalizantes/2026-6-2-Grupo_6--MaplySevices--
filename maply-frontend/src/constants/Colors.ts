@@ -2,6 +2,7 @@
 // como variables CSS (clases bg-fondo, text-texto, etc.) y lo que necesita el
 // hex directo (íconos, Mapbox, ActivityIndicator) usa useColores().
 import { useColorScheme } from 'react-native';
+import { usePreferenciaTema } from '@/state/tema';
 
 export const Marca = { azul: '#3D98F5', indigo: '#3E50E3', violeta: '#7051ED' };
 
@@ -62,6 +63,9 @@ export function textoEstado(categoria: string | null | undefined, oscuro: boolea
 }
 
 export function useColores() {
-  const oscuro = useColorScheme() === 'dark';
+  // "Automático" sigue al tema del celular; "Claro" y "Oscuro" lo fuerzan.
+  const sistema = useColorScheme();
+  const preferencia = usePreferenciaTema();
+  const oscuro = preferencia === 'oscuro' || (preferencia === 'auto' && sistema === 'dark');
   return { ...Temas[oscuro ? 'dark' : 'light'], oscuro };
 }

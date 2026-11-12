@@ -70,7 +70,19 @@
     "translatedBy": "Traducido automáticamente",
     "thisReport": "Este reporte",
     "back": "Volver",
-    "errorTitle": "No pudimos cargar el reporte"
+    "errorTitle": "No pudimos cargar el reporte",
+    "reasonFalseHint": "El lugar no está así o el dato no es real",
+    "reasonOffensiveHint": "Insultos, publicidad o contenido que no corresponde",
+    "reportHint": "Con 3 denuncias de usuarios distintos el reporte se oculta hasta que lo revisemos.",
+    "reportSentTitle": "¡Gracias por avisar!",
+    "reportSending": "Enviando…",
+    "close": "Cerrar",
+    "delete": "Eliminar reporte",
+    "deleteTitle": "¿Eliminar este reporte?",
+    "deleteHintOwn": "Deja de verse en el mapa y en la lista. No se puede deshacer.",
+    "deleteHintAdmin": "Lo vas a eliminar como administrador. Sus denuncias pendientes quedan como revisadas.",
+    "deleteConfirm": "Eliminar",
+    "deleteError": "No se pudo eliminar"
   },
   "config": {
     "title": "Configuración",
@@ -82,7 +94,13 @@
     "deleteConfirm": "Eliminar",
     "deleteWarning": "¿Seguro? Tu cuenta y tus reportes se borran para siempre.",
     "deleteError": "No se pudo eliminar la cuenta",
-    "privacy": "Privacidad y términos"
+    "privacy": "Privacidad y términos",
+    "theme": "Tema",
+    "themes": {
+      "auto": "Automático",
+      "claro": "Claro",
+      "oscuro": "Oscuro"
+    }
   },
   "auth": {
     "loginLink": "Iniciar sesión",
@@ -148,5 +166,14 @@
   "common": {
     "retry": "Reintentar",
     "checkConnection": "Revisá tu conexión a internet y probá de nuevo."
+  },
+  "mapInfo": {
+    "title": "Datos del mapa",
+    "body": "El mapa usa datos de Mapbox y de OpenStreetMap, un mapa colaborativo hecho por voluntarios.",
+    "mapbox": "© Mapbox",
+    "osm": "© Colaboradores de OpenStreetMap",
+    "improve": "Mejorar este mapa",
+    "info": "Información del mapa",
+    "close": "Cerrar"
   }
 }

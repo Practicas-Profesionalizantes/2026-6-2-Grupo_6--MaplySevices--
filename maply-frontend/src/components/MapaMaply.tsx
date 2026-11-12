@@ -1,9 +1,12 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { View, Text, Pressable, type StyleProp, type ViewStyle } from 'react-native';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Linking, View, Text, Pressable, type StyleProp, type ViewStyle } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 import Mapbox from '@rnmapbox/maps';
 
 import { colorEstado, useColores } from '@/constants/Colors';
+import { HojaInferior, OpcionHoja } from '@/components/ui';
 
 /**
  * Capa de abstracción sobre el proveedor de mapas.
@@ -124,7 +127,10 @@ export const MapaMaply = forwardRef<MapaMaplyHandle, MapaMaplyProps>(function Ma
   ref
 ) {
   const cameraRef = useRef<Mapbox.Camera>(null);
-  const { oscuro } = useColores();
+  const c = useColores();
+  const { oscuro } = c;
+  const { t } = useTranslation();
+  const [infoVisible, setInfoVisible] = useState(false);
 
   useImperativeHandle(ref, () => ({
     mostrarPin(lugar) {
@@ -150,39 +156,65 @@ export const MapaMaply = forwardRef<MapaMaplyHandle, MapaMaplyProps>(function Ma
   }
 
   return (
-    <Mapbox.MapView
-      style={style}
-      styleURL={oscuro ? Mapbox.StyleURL.Dark : Mapbox.StyleURL.Light}
-      scrollEnabled={interactivo}
-      zoomEnabled={interactivo}
-      rotateEnabled={interactivo}
-      pitchEnabled={false}
-      scaleBarEnabled={false}
-      logoPosition={{ top: margenOrnamentos, left: 12 }}
-      attributionPosition={{ top: margenOrnamentos, left: 100 }}
-      compassEnabled={false}
-    >
-      <Mapbox.Camera ref={cameraRef} zoomLevel={zoom} centerCoordinate={centro ?? CENTRO_CABA} animationDuration={0} />
-      {mostrarUbicacion ? <Mapbox.LocationPuck puckBearingEnabled={false} /> : null}
-      {/* ponytail: un MarkerView por lugar (sin clusters) para poder animar
-          los pines; si algún día hay cientos de lugares en pantalla, volver
-          a ShapeSource + SymbolLayer con clusters. */}
-      {pines.map((lugar, i) => (
-        <Mapbox.MarkerView
-          key={lugar.id}
-          coordinate={[lugar.longitud, lugar.latitud]}
-          anchor={{ x: 0.5, y: 1 }}
-          allowOverlap
-        >
-          <Pin
-            lugar={lugar}
-            orden={i}
-            elegido={lugar.id === elegidoId}
-            onPress={onPinPress ? () => onPinPress(lugar) : undefined}
-          />
-        </Mapbox.MarkerView>
-      ))}
-    </Mapbox.MapView>
+    <View style={style}>
+      <Mapbox.MapView
+        style={{ flex: 1 }}
+        styleURL={oscuro ? Mapbox.StyleURL.Dark : Mapbox.StyleURL.Light}
+        scrollEnabled={interactivo}
+        zoomEnabled={interactivo}
+        rotateEnabled={interactivo}
+        pitchEnabled={false}
+        scaleBarEnabled={false}
+        logoPosition={{ top: margenOrnamentos, left: 12 }}
+        // Atribución propia (botón ⓘ con hoja de la app) en lugar del diálogo
+        // nativo de Mapbox. Mapbox exige mostrar © Mapbox, © OpenStreetMap y
+        // "Mejorar este mapa": están todos en la hoja de abajo.
+        attributionEnabled={false}
+        compassEnabled={false}
+      >
+        <Mapbox.Camera ref={cameraRef} zoomLevel={zoom} centerCoordinate={centro ?? CENTRO_CABA} animationDuration={0} />
+        {mostrarUbicacion ? <Mapbox.LocationPuck puckBearingEnabled={false} /> : null}
+        {/* ponytail: un MarkerView por lugar (sin clusters) para poder animar
+            los pines; si algún día hay cientos de lugares en pantalla, volver
+            a ShapeSource + SymbolLayer con clusters. */}
+        {pines.map((lugar, i) => (
+          <Mapbox.MarkerView
+            key={lugar.id}
+            coordinate={[lugar.longitud, lugar.latitud]}
+            anchor={{ x: 0.5, y: 1 }}
+            allowOverlap
+          >
+            <Pin
+              lugar={lugar}
+              orden={i}
+              elegido={lugar.id === elegidoId}
+              onPress={onPinPress ? () => onPinPress(lugar) : undefined}
+            />
+          </Mapbox.MarkerView>
+        ))}
+      </Mapbox.MapView>
+      <Pressable
+        onPress={() => setInfoVisible(true)}
+        accessibilityRole="button"
+        accessibilityLabel={t('mapInfo.info')}
+        hitSlop={10}
+        className="absolute h-7 w-7 items-center justify-center rounded-full"
+        style={{ top: margenOrnamentos + 2, left: 104, backgroundColor: c.superficie + 'E6' }}
+      >
+        <Ionicons name="information" size={16} color={c.secundario} />
+      </Pressable>
+      <HojaInferior visible={infoVisible} onCerrar={() => setInfoVisible(false)} etiquetaCerrar={t('mapInfo.close')}>
+        <Text className="font-nunito9 text-[22px] text-texto">{t('mapInfo.title')}</Text>
+        <Text className="mb-5 mt-1 font-nunito text-[15px] text-secundario">{t('mapInfo.body')}</Text>
+        <OpcionHoja icono="map-outline" titulo={t('mapInfo.mapbox')} onPress={() => Linking.openURL('https://www.mapbox.com/about/maps/')} />
+        <OpcionHoja icono="globe-outline" titulo={t('mapInfo.osm')} onPress={() => Linking.openURL('https://www.openstreetmap.org/copyright')} />
+        <OpcionHoja icono="create-outline" titulo={t('mapInfo.improve')} onPress={() => Linking.openURL('https://apps.mapbox.com/feedback/')} />
+        <View className="h-1.5" />
+        <Pressable onPress={() => setInfoVisible(false)} accessibilityRole="button" className="min-h-14 items-center justify-center rounded-[18px] border-[1.5px] border-borde">
+          <Text className="font-nunito8 text-base text-texto">{t('mapInfo.close')}</Text>
+        </Pressable>
+      </HojaInferior>
+    </View>
   );
 });
 

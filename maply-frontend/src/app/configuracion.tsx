@@ -9,11 +9,18 @@ import i18n from '@/constants/i18n';
 import { Boton, Campo, Encabezado } from '@/components/ui';
 import { useColores } from '@/constants/Colors';
 import { borrarCuenta, getUsuarioActual, type Usuario } from '@/services/api';
+import { cambiarTema, usePreferenciaTema, type PreferenciaTema } from '@/state/tema';
 
 const IDIOMAS = [
   { codigo: 'es', etiqueta: 'Español' },
   { codigo: 'en', etiqueta: 'English' },
 ] as const;
+
+const TEMAS: { codigo: PreferenciaTema; icono: 'phone-portrait-outline' | 'sunny-outline' | 'moon-outline' }[] = [
+  { codigo: 'auto', icono: 'phone-portrait-outline' },
+  { codigo: 'claro', icono: 'sunny-outline' },
+  { codigo: 'oscuro', icono: 'moon-outline' },
+];
 
 function formatearFecha(fechaIso?: string): string | null {
   if (!fechaIso) return null;
@@ -33,6 +40,7 @@ export default function ConfiguracionScreen() {
   const [borrando, setBorrando] = useState(false);
   const [contrasena, setContrasena] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const tema = usePreferenciaTema();
 
   // Alert.alert en web no muestra botones, así que se confirma con window.confirm.
   function confirmar(mensaje: string, onSi: () => void) {
@@ -114,6 +122,26 @@ export default function ConfiguracionScreen() {
                 style={activo ? { shadowColor: '#0E1330', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 } : undefined}
               >
                 <Text className={`font-nunito8 text-base ${activo ? 'text-texto' : 'text-secundario'}`}>{opcion.etiqueta}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Text className="mb-2 mt-6 font-nunito8 text-[15px] text-secundario">{t('config.theme')}</Text>
+        <View className="flex-row rounded-2xl bg-borde p-1" accessibilityRole="radiogroup">
+          {TEMAS.map((opcion) => {
+            const activo = tema === opcion.codigo;
+            return (
+              <Pressable
+                key={opcion.codigo}
+                onPress={() => cambiarTema(opcion.codigo)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: activo }}
+                className={`min-h-12 flex-1 flex-row items-center justify-center gap-1.5 rounded-xl ${activo ? 'bg-superficie' : ''}`}
+                style={activo ? { shadowColor: '#0E1330', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 } : undefined}
+              >
+                <Ionicons name={opcion.icono} size={16} color={activo ? c.texto : c.secundario} />
+                <Text className={`font-nunito8 text-[15px] ${activo ? 'text-texto' : 'text-secundario'}`}>{t(`config.themes.${opcion.codigo}`)}</Text>
               </Pressable>
             );
           })}
